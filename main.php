@@ -117,7 +117,47 @@ function start($telegram,$update)
 				{
 					$text1=strtoupper($username);
 					$homepage="";
-					// il GDRIVEGID1 è il gid per un google sheet dove c'è l'elenco degli username abilitati.
+					// il GDRIVEGID è il gid per un google sheet dove c'è l'elenco degli username registrati.
+					$url ="https://spreadsheets.google.com/tq?tqx=out:csv&tq=SELECT%20%2A%20WHERE%20upper(D)%20LIKE%20%27%25".$text1;
+					$url .="%25%27%20&key=".GDRIVEKEY."&gid=".GDRIVEGID;
+					$csv = array_map('str_getcsv', file($url));
+					$count = 0;
+					foreach($csv as $data=>$csv1){
+						$count = $count+1;
+					}
+						if ($count >1 OR $username="piersoft") // inserire l'admin abilitato alla cancellazione oltre l'utente
+							{
+					$statement = "DELETE FROM ".DB_TABLE_GEO ." WHERE bot_request_message ='".$text."'";
+					$db->exec($statement);
+					$reply = "La segnalazione n° ".$text." è stata cancellata";
+					$content = array('chat_id' => $chat_id, 'text' => $reply);
+					$telegram->sendMessage($content);
+					exec(' sqlite3 -header -csv '.$db_path.' "select * from segnalazioni;" > '.$csv_path. ' ');
+					$log=$today. ",segnalazione cancellata," .$chat_id. "\n";
+				}else{
+					$content = array('chat_id' => $chat_id, 'text' => $username.", non risulti essere un utente autorizzato ad aggiornare le segnalazioni.",'disable_web_page_preview'=>true);
+					$telegram->sendMessage($content);
+					$this->create_keyboard($telegram,$chat_id);
+					exit;
+				}
+
+			}
+
+		}	elseif (strpos($text,'e:') !== false) {
+				$text=str_replace("e:","",$text);
+				$text=str_replace(" ","",$text);
+
+				if ($username==""){
+					$content = array('chat_id' => $chat_id, 'text' => "Devi obbligatoriamente impostare il tuo username nelle impostazioni di Telegram",'disable_web_page_preview'=>true);
+					$telegram->sendMessage($content);
+					$log=$today.",".$todayd. ",nousernameset," .$chat_id.",".$username.",".$user_id."\n";
+					file_put_contents('/usr/www/piersoft/comunepulitobot/db/telegram.log', $log, FILE_APPEND | LOCK_EX);
+					$this->create_keyboard($telegram,$chat_id);
+					exit;
+				}else
+				{
+					$text1=strtoupper($username);
+					$homepage="";
 					$url ="https://spreadsheets.google.com/tq?tqx=out:csv&tq=SELECT%20%2A%20WHERE%20upper(D)%20LIKE%20%27%25".$text1;
 					$url .="%25%27%20&key=".GDRIVEKEY."&gid=".GDRIVEGID1;
 					$csv = array_map('str_getcsv', file($url));
@@ -127,13 +167,32 @@ function start($telegram,$update)
 					}
 						if ($count >1)
 							{
-					$statement = "DELETE FROM ".DB_TABLE_GEO ." WHERE bot_request_message ='".$text."'";
+
+					$statement = "UPDATE ".DB_TABLE_GEO ." SET aggiornata='evasa' WHERE bot_request_message ='".$text."'";
 					$db->exec($statement);
-					$reply = "La segnalazione n° ".$text." è stata cancellata";
+					$reply = "Segnalazione n° ".$text." è stata evasa";
 					$content = array('chat_id' => $chat_id, 'text' => $reply);
 					$telegram->sendMessage($content);
 					exec(' sqlite3 -header -csv '.$db_path.' "select * from segnalazioni;" > '.$csv_path. ' ');
-					$log=$today. ",segnalazione cancellata," .$chat_id. "\n";
+					$log=$today. ",segnalazione aggiornata," .$chat_id. "\n";
+					$db1 = new SQLite3($db_path);
+					$q = "SELECT user,username FROM ".DB_TABLE_GEO ." WHERE bot_request_message='".$text."'";
+					$result=	$db1->query($q);
+					$row = array();
+					$i=0;
+
+					while($res = $result->fetchArray(SQLITE3_ASSOC))
+							{
+
+									if(!isset($res['user'])) continue;
+
+									 $row[$i]['user'] = $res['user'];
+									 $row[$i]['username'] = $res['username'];
+
+									 $i++;
+							 }
+							 $content = array('chat_id' => $row[0]['user'], 'text' => $row[0]['username']." la tua segnalazione è stata evasa, ti ringraziamo.",'disable_web_page_preview'=>true);
+						 	 $telegram->sendMessage($content);
 				}else{
 					$content = array('chat_id' => $chat_id, 'text' => $username.", non risulti essere un utente autorizzato ad aggiornare le segnalazioni.",'disable_web_page_preview'=>true);
 					$telegram->sendMessage($content);
@@ -306,7 +365,7 @@ function start($telegram,$update)
 							$this->location_manager($username,$db,$telegram,$user_id,$chat_id,$location);
 							exit;
 							}else{
-								$content = array('chat_id' => $chat_id, 'text' => $username.", non risulti essere un utente autorizzato ad inviare le segnalazioni. Compila questo form: https://goo.gl/forms/29j5UtOx3MUkxoRG2.",'disable_web_page_preview'=>true);
+								$content = array('chat_id' => $chat_id, 'text' => $username.", non risulti essere un utente autorizzato ad inviare le segnalazioni. Compila questo form: https://goo.gl/forms/jHF32JX6K7V2mkkk2.",'disable_web_page_preview'=>true);
 								$telegram->sendMessage($content);
 								$this->create_keyboard($telegram,$chat_id);
 								exit;
