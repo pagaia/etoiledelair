@@ -45,7 +45,7 @@ function start($telegram,$update)
 	$today = date("Y-m-d H:i:s");
 
 	if ($text == "/start" || $text == "info" || $text == "©️info") {
-		$reply = "Benvenuto ".$first_name.". Questo Bot è stato realizzato da @piersoft per dimostrazione di Civic Hacking.\nPermette di mappare situazioni per un monitoraggio civico di degrado urbano, buche stradali o lampioni con luci fulminate, a sussidio del proprio ente comunale.\nL'autore non è responsabile per l'uso improprio di questo strumento e dei contenuti degli utenti.\nLa mappatura è abilitata solo per utenti che hanno \"username\" (univoci su Telegram tramite la sua sezione Impostazioni) e vengono registrati e visualizzati pubblicamente su mappa con licenza CC0 (pubblico dominio).\nPer partecipare bisogna compilare il seguente form: https://goo.gl/forms/jHF32JX6K7V2mkkk2. \n\nLa geocodifca dei dati avviene grazie al database Nominatim di openStreeMap con licenza oDBL";
+		$reply = "Benvenuto ".$first_name.". Questo Bot è stato realizzato da @piersoft per dimostrazione di Civic Hacking.\nPermette di mappare situazioni per un monitoraggio civico di degrado urbano, buche stradali o lampioni con luci fulminate, a sussidio del proprio ente comunale.\nLeggi il progetto su http://www.piersoft.it/civichacking-con-un-bot-telegram-la-demo-di-comunepulitobot/.\nL'autore non è responsabile per l'uso improprio di questo strumento e dei contenuti degli utenti.\nLa mappatura è abilitata solo per utenti che hanno \"username\" (univoci su Telegram tramite la sua sezione Impostazioni) e vengono registrati e visualizzati pubblicamente su mappa con licenza CC0 (pubblico dominio).\nPer partecipare bisogna compilare il seguente form: https://goo.gl/forms/jHF32JX6K7V2mkkk2. \n\nLa geocodifca dei dati avviene grazie al database Nominatim di openStreeMap con licenza oDBL.\nTutti i dati sono in licenza CC0 in formato CSV su http://bit.ly/2MGxRPP";
 		$content = array('chat_id' => $chat_id, 'text' => $reply,'disable_web_page_preview'=>true);
 		$telegram->sendMessage($content);
 
@@ -73,7 +73,9 @@ function start($telegram,$update)
 		$telegram->sendPhoto($contentp);
 		$content = array('chat_id' => $chat_id, 'text' => "[Immagine realizzata da Alessandro Ghezzer]");
 		$telegram->sendMessage($content);
-		$content = array('chat_id' => $chat_id, 'text' => "<b>Dopo che hai inviato la tua posizione puoi aggiungere una categoria!!</b>\nSe hai mandato una foto o file e vuoi aggiungere un testo puoi usare t:numesegnazione:testo\nEsempio <b>t:123:testo prova</b>",'parse_mode'=>"HTML");
+		$content = array('chat_id' => $chat_id, 'text' => "<b>Dopo che hai inviato la tua posizione puoi aggiungere una categoria!!</b>\nSe hai mandato una foto o file e vuoi aggiungere un testo puoi usare t:numsegnalazione:testo\nEsempio <b>t:123:testo prova</b>",'parse_mode'=>"HTML");
+		$telegram->sendMessage($content);
+		$content = array('chat_id' => $chat_id, 'text' => "Per cancellare: <b>cancella:numerosegnalazione</b>\n",'parse_mode'=>"HTML");
 		$telegram->sendMessage($content);
 		$link="http://bit.ly/2N9NDlH";
 		$content = array('chat_id' => $chat_id, 'text' => "<b>Vuoi anche un piccolo video passo passo? clicca </b>".$link,'parse_mode'=>"HTML");

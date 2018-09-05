@@ -32,6 +32,7 @@
 			height: 100%;
 			font-family: Arial, sans-serif;
 			font-color: #38383;
+				z-index: 2;
 		}
 
 		#botonera {
@@ -103,14 +104,19 @@ position: fixed;
 
 overflow-y: auto;
 overflow-x: hidden;
+	z-index: 3;
+	-webkit-border-radius: 10px;
+	-moz-border-radius: 10px;
+	border-radius: 10px;
+
 }
 		</style>
 	</head>
 	<body>
 		<div id="mapa"></div>
 		<div id="infodiv" style="leaflet-popup-content-wrapper">
-			<p><b>Mappatura partecipata<br></b>
-			Oggetti mappati tramite <a href="https://telegram.me/comunepulitobot" targer="_blank">@comunepulitobot</a> su Telegram - by @piersoft</br>Dataset scaricabile in lic. CC0  in formato <a href="https://goo.gl/eER9ly">CSV</a></p>
+			<p><b>Civic Hacking - <a href="http://www.piersoft.it/civichacking-con-un-bot-telegram-la-demo-di-comunepulitobot/" targer="_blank">leggi il progetto</a></b></br>
+			Oggetti segnalati tramite <a href="https://telegram.me/comunepulitobot" targer="_blank">@comunepulitobot</a> su Telegram - by @piersoft</br>Dataset scaricabile in lic. CC0  in formato <a href="http://bit.ly/2MGxRPP">CSV</a></p>
 		</div>
 		<div id="cargando">Sto leggendo i dati...</div>
 
@@ -146,7 +152,7 @@ var bankias = L.geoCsv(null, {firstLineTitles: true, fieldSeparator: ',',
 //personalizza il path per il file allegato.php
 		immagine='https://www.piersoft.it/comunepulitobot/allegato.php?id='+feature.properties.file_id;
 
-		popup += '<b><img src='+immagine+' style="width:250px;" alt="25"/></b><br /><b><a href="https://www.piersoft.it/comunepulitobot/allegato.php?id='+feature.properties.file_id+'" />Scarica allegato</a></b><br />';
+		popup += '<b><img src='+immagine+' style="width:220px;" alt="25"/></b><br /><b><a href="https://www.piersoft.it/comunepulitobot/allegato.php?id='+feature.properties.file_id+'" />Scarica allegato</a></b><br />';
 
 	}
 	if (feature.properties.aggiornata.length > 0){
@@ -167,7 +173,7 @@ var bankias = L.geoCsv(null, {firstLineTitles: true, fieldSeparator: ',',
 		if (feature.properties.categoria =="Rifiuti") icona="ALBERO.png";
 		if (feature.properties.categoria =="Ristorante") icona="RISTORANTE.png";
 		if (feature.properties.categoria =="Palo luce") icona="LUCE.png";
-		if (feature.properties.categoria =="Buche") icona="BARRIERE.png";
+		if (feature.properties.categoria =="Buche") icona="BUCA.png";
 		if (feature.properties.categoria =="Ponti") icona="PONTE.png";
 if (feature.properties.categoria =="Energia e vita+") icona="piu.png";
 if (feature.properties.categoria =="Energia e vita-") icona="meno.png";
