@@ -45,7 +45,7 @@ function start($telegram,$update)
 	$today = date("Y-m-d H:i:s");
 
 	if ($text == "/start" || $text == "info" || $text == "©️info") {
-		$reply = "Benvenuto ".$first_name.". Questo Bot è stato realizzato da @piersoft per dimostrazione di Civic Hacking.\nPermette di mappare situazioni per un monitoraggio civico di degrado urbano, buche stradali o lampioni con luci fulminate, a sussidio del proprio ente comunale.\nLeggi il progetto su http://www.piersoft.it/civichacking-con-un-bot-telegram-la-demo-di-comunepulitobot/.\nL'autore non è responsabile per l'uso improprio di questo strumento e dei contenuti degli utenti.\nLa mappatura è abilitata solo per utenti che hanno \"username\" (univoci su Telegram tramite la sua sezione Impostazioni) e vengono registrati e visualizzati pubblicamente su mappa con licenza CC0 (pubblico dominio).\nPer partecipare bisogna compilare il seguente form: https://goo.gl/forms/jHF32JX6K7V2mkkk2. \n\nLa geocodifca dei dati avviene grazie al database Nominatim di openStreeMap con licenza oDBL.\nTutti i dati sono in licenza CC0 in formato CSV su http://bit.ly/2MGxRPP";
+		$reply = "Benvenuto ".$first_name.". Questo Bot è stato realizzato da @piersoft per dimostrazione di Civic Hacking.\nPermette di mappare situazioni per un monitoraggio civico di degrado urbano, buche stradali o lampioni con luci fulminate, a sussidio del proprio ente comunale.\nLeggi il progetto su http://www.piersoft.it/civichacking-con-un-bot-telegram-la-demo-di-comunepulitobot/.\nL'autore non è responsabile per l'uso improprio di questo strumento e dei contenuti degli utenti.\nLa mappatura è abilitata solo per utenti che hanno \"username\" (univoci su Telegram tramite la sua sezione Impostazioni) e vengono registrati e visualizzati pubblicamente su mappa con licenza CC0 (pubblico dominio).\nPer partecipare bisogna compilare il seguente form: https://goo.gl/forms/jHF32JX6K7V2mkkk2. \n\nLa geocodifca dei dati avviene grazie al database Nominatim di openStreeMap con licenza oDBL.\nTutti i dati sono in licenza CC0 in formato CSV su http://bit.ly/2MGxRPP.\nIcone della mappa realizzate da Francesco Lanotte";
 		$content = array('chat_id' => $chat_id, 'text' => $reply,'disable_web_page_preview'=>true);
 		$telegram->sendMessage($content);
 
@@ -264,7 +264,7 @@ function start($telegram,$update)
 
 			}
 
-		}elseif (strpos($text,'📕') !== false || strpos($text,'🎢') !== false || strpos($text,'☕️') !== false || strpos($text,'👨‍👨‍👧‍👧') !== false ||strpos($text,'👨‍🎓') !== false ||strpos($text,'🤩') !== false ||strpos($text,'🏫') !== false ||strpos($text,'🏛') !== false || strpos($text,'📗') !== false || strpos($text,'♿️') !== false || strpos($text,'👇') !== false || strpos($text,'👍') !== false||strpos($text,'🌲') !== false ||strpos($text,'💡') !== false ||strpos($text,'🍺') !== false ||strpos($text,'🍕') !== false ||strpos($text,'1️⃣') !== false ||strpos($text,'🏨') !== false) {
+		}elseif (strpos($text,'😡') !== false || strpos($text,'📕') !== false || strpos($text,'🎢') !== false || strpos($text,'☕️') !== false || strpos($text,'👨‍👨‍👧‍👧') !== false ||strpos($text,'👨‍🎓') !== false ||strpos($text,'🤩') !== false ||strpos($text,'🏫') !== false ||strpos($text,'🏛') !== false || strpos($text,'📗') !== false || strpos($text,'♿️') !== false || strpos($text,'👇') !== false || strpos($text,'👍') !== false||strpos($text,'🌲') !== false ||strpos($text,'💡') !== false ||strpos($text,'🍺') !== false ||strpos($text,'🍕') !== false ||strpos($text,'1️⃣') !== false ||strpos($text,'🏨') !== false) {
 
 			$string="";
 			if (strpos($text,'📕') !== false) $string="-";
@@ -289,7 +289,7 @@ function start($telegram,$update)
 				$text=str_replace("🏛",":",$text);
 				$text=str_replace("☕️",":",$text);
 				$text=str_replace("🎢",":",$text);
-
+				$text=str_replace("😡",":",$text);
 
 			function extractString($string, $start, $end) {
 					$string = " ".$string;
@@ -495,7 +495,7 @@ if ($row[0]['lat'] == ""){
 		$content = array('chat_id' => GRUPPO, 'text' => "Segnalazione in arrivo numero ".$reply_to_msg['message_id']." da parte dell'utente @".$username." il ".$today."\n".$mappa.$linkfile."\n".$text);
 		$telegram->sendMessage($content);
 	// STANDARD //
-	$option = array(["Annulla","♿️Buche\n:".$reply_to_msg['message_id'].":"],["🌲Rifiuti\n:".$reply_to_msg['message_id'].":","💡Palo luce\n:".$reply_to_msg['message_id'].":"]);
+	$option = array(["😡Vandalismo\n:".$reply_to_msg['message_id'].":","♿️Buche\n:".$reply_to_msg['message_id'].":"],["🌲Rifiuti\n:".$reply_to_msg['message_id'].":","💡Palo luce\n:".$reply_to_msg['message_id'].":"],["Annulla"]);
 	$keyb = $telegram->buildKeyBoard($option, $onetime=true);
 		$content = array('chat_id' => $chat_id, 'reply_markup' => $keyb, 'text' => "[guarda la mappa delle segnalazioni su http://www.piersoft.it/comunepulitobot/ oppure aggiungi una categoria:]");
 		$telegram->sendMessage($content);

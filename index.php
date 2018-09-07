@@ -165,24 +165,13 @@ var bankias = L.geoCsv(null, {firstLineTitles: true, fieldSeparator: ',',
 		layer.bindPopup(popup);
 	},
 	pointToLayer: function (feature, latlng) {
-		if (feature.properties.categoria =="Forze") icona="FORZE.png";
-		if (feature.properties.categoria =="Debolezze") icona="DEBOLEZZE.png";
-		if (feature.properties.categoria =="Pub") icona="PUB.png";
-		if (feature.properties.categoria =="Dormire") icona="DORMIRE.png";
-		if (feature.properties.categoria =="Civico") icona="CIVICO.png";
-		if (feature.properties.categoria =="Rifiuti") icona="ALBERO.png";
-		if (feature.properties.categoria =="Ristorante") icona="RISTORANTE.png";
-		if (feature.properties.categoria =="Palo luce") icona="LUCE.png";
-		if (feature.properties.categoria =="Buche") icona="BUCA.png";
-		if (feature.properties.categoria =="Ponti") icona="PONTE.png";
-if (feature.properties.categoria =="Energia e vita+") icona="piu.png";
-if (feature.properties.categoria =="Energia e vita-") icona="meno.png";
-if (feature.properties.categoria =="Clima e rischi+") icona="piu.png";
-if (feature.properties.categoria =="Clima e rischi-") icona="meno.png";
-if (feature.properties.categoria =="Ambiente e cultura+") icona="piu.png";
-if (feature.properties.categoria =="Ambiente e cultura-") icona="meno.png";
-if (feature.properties.categoria =="Società e inclusione+") icona="piu.png";
-if (feature.properties.categoria =="Società e inclusione-") icona="meno.png";
+
+		if (feature.properties.categoria =="Civico") icona="icons/CIVICO.png";
+		if (feature.properties.categoria =="Rifiuti") icona="icons/RIFIUTI.png";
+		if (feature.properties.categoria =="Palo luce") icona="icons/LUCE.png";
+		if (feature.properties.categoria =="Buche") icona="icons/BUCA.png";
+		if (feature.properties.categoria =="Vandalismo") icona="icons/VANDALISMO.png";
+
 if (feature.properties.aggiornata.length > 0) icona="icon1.png";
 	//	else icona="icon.png";
 		return L.marker(latlng, {
