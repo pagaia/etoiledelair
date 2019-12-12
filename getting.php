@@ -121,8 +121,8 @@ return $alert;
 }
 
 
-public function get_revgeo($lat,$lon)
-$reply="http://nominatim.openstreetmap.org/reverse?email=piersoft2@gmail.com&format=json&lat=".$lat."&lon=".$lng."&zoom=18&addressdetails=1";
+public function get_revgeo($lat,$lon){
+$reply="http://nominatim.openstreetmap.org/reverse?email=piersoft2@gmail.com&format=json&lat=".$lat."&lon=".$lon."&zoom=18&addressdetails=1";
 $json_string = file_get_contents($reply);
 $parsed_json = json_decode($json_string);
 //var_dump($parsed_json);
@@ -223,4 +223,4 @@ if ($parsed_json->{'address'}->{'city'}) {
  }
  }
 
-?>
+ ?>
