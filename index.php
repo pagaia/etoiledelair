@@ -8,21 +8,21 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
 	<!-- Leaflet 0.5: https://github.com/CloudMade/Leaflet-->
-	<link rel="stylesheet" href="http://joker-x.github.io/Leaflet.geoCSV/lib/leaflet.css" />
+	<link rel="stylesheet" href="https://joker-x.github.io/Leaflet.geoCSV/lib/leaflet.css" />
 	<!--[if lte IE 8]> <link rel="stylesheet" href="../../lib/leaflet.ie.css" />  <![endif]-->
-	<script src="http://joker-x.github.io/Leaflet.geoCSV/lib/leaflet.js"></script>
+	<script src="https://joker-x.github.io/Leaflet.geoCSV/lib/leaflet.js"></script>
 
 	<!-- MarkerCluster https://github.com/danzel/Leaflet.markercluster -->
-	<link rel="stylesheet" href="http://joker-x.github.io/Leaflet.geoCSV/lib/MarkerCluster.css" />
-	<link rel="stylesheet" href="http://joker-x.github.io/Leaflet.geoCSV/lib/MarkerCluster.Default.css" />
+	<link rel="stylesheet" href="https://joker-x.github.io/Leaflet.geoCSV/lib/MarkerCluster.css" />
+	<link rel="stylesheet" href="https://joker-x.github.io/Leaflet.geoCSV/lib/MarkerCluster.Default.css" />
 	<!--[if lte IE 8]> <link rel="stylesheet" href="../../lib/MarkerCluster.Default.ie.css" /> <![endif]-->
-	<script src="http://joker-x.github.io/Leaflet.geoCSV/lib/leaflet.markercluster-src.js"></script>
+	<script src="https://joker-x.github.io/Leaflet.geoCSV/lib/leaflet.markercluster-src.js"></script>
 
 	<!-- GeoCSV: https://github.com/joker-x/Leaflet.geoCSV -->
-	<script src="http://joker-x.github.io/Leaflet.geoCSV/leaflet.geocsv-src.js"></script>
-	<script src='http://api.tiles.mapbox.com/mapbox.js/plugins/leaflet-hash/v0.2.1/leaflet-hash.js'></script>
+	<script src="https://joker-x.github.io/Leaflet.geoCSV/leaflet.geocsv-src.js"></script>
+	<script src='https://api.tiles.mapbox.com/mapbox.js/plugins/leaflet-hash/v0.2.1/leaflet-hash.js'></script>
 	<!-- jQuery 1.8.3: http://jquery.com/ -->
-	<script src="http://joker-x.github.io/Leaflet.geoCSV/lib/jquery.js"></script>
+	<script src="https://joker-x.github.io/Leaflet.geoCSV/lib/jquery.js"></script>
 
 	<style>
 		html,
