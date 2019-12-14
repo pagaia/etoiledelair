@@ -1,8 +1,9 @@
 <?php
 
 /**
- * Telegram Bot example for mapping "comunepulitobot".
+ * Telegram Bot example for mapping points noir in Brussels.
  * @author Francesco Piero Paolicelli
+ * @author Remo Moro @pagaia
  */
 include("./settings_t.php");
 include("./Telegram.php");
@@ -10,10 +11,11 @@ include("./Telegram.php");
 class mainloop
 {
 	const MAX_LENGTH = 4096;
+
 	function start($telegram, $update)
 	{
 
-		date_default_timezone_set('Europe/Rome');
+		date_default_timezone_set('Europe/Brussels');
 		$today = date("Y-m-d H:i:s");
 		//$data=new getdata();
 		// Instances the class
@@ -45,8 +47,22 @@ class mainloop
 		date_default_timezone_set('Europe/Rome');
 		$today = date("Y-m-d H:i:s");
 
+		//$text = strtoupper($text);
+
 		if ($text == "/start" || $text == "info" || $text == "©️info") {
-			$reply = "Benvenuto " . $first_name . ". Questo Bot è stato realizzato da @piersoft per dimostrazione di Civic Hacking.\nPermette di mappare situazioni per un monitoraggio civico di degrado urbano, buche stradali o lampioni con luci fulminate, a sussidio del proprio ente comunale.\nLeggi il progetto su http://www.piersoft.it/civichacking-con-un-bot-telegram-la-demo-di-comunepulitobot/.\nL'autore non è responsabile per l'uso improprio di questo strumento e dei contenuti degli utenti.\nLa mappatura è abilitata solo per utenti che hanno \"username\" (univoci su Telegram tramite la sua sezione Impostazioni) e vengono registrati e visualizzati pubblicamente su mappa con licenza CC0 (pubblico dominio).\nPer partecipare bisogna compilare il seguente form: https://goo.gl/forms/jHF32JX6K7V2mkkk2. \n\nLa geocodifca dei dati avviene grazie al database Nominatim di openStreeMap con licenza oDBL.\nTutti i dati sono in licenza CC0 in formato CSV su http://bit.ly/2MGxRPP.\nIcone della mappa realizzate da Francesco Lanotte";
+			$reply = `Welcome $first_name 
+			This Bot has been adapted by @pagaia from a previous version of @piersoft as a support tool to get reports about issues in the city.
+			In particular it is used to report sensitive areas/points in some streets for the normal way to and from school in order to help the Filter Cafe Filtre of Etterbeek
+			to localize in a simple and shared way the information.
+			The author is not responsible for the improper use of this tool and the contents of the users.
+			
+			La mappatura è abilitata solo per utenti che hanno \"username\" (univoci su Telegram tramite la sua sezione Impostazioni) 
+			e vengono registrati e visualizzati pubblicamente su mappa con licenza CC0 (pubblico dominio).
+			Per partecipare bisogna compilare il seguente form: https://goo.gl/forms/jHF32JX6K7V2mkkk2.
+				
+			La geocodifca dei dati avviene grazie al database Nominatim di openStreeMap con licenza oDBL.
+			Tutti i dati sono in licenza CC0 in formato CSV su http://bit.ly/2MGxRPP.
+			Icone della mappa realizzate da Francesco Lanotte"`;
 			$content = array('chat_id' => $chat_id, 'text' => $reply, 'disable_web_page_preview' => true);
 			$telegram->sendMessage($content);
 
@@ -57,31 +73,31 @@ class mainloop
 			$log = $today . ",new chat started," . $chat_id . "\n";
 			$this->create_keyboard($telegram, $chat_id);
 			exit;
-		} elseif ($text == "/location" || $text == "🌐posizione") {
+		} elseif ($text == "/location" || $text == "🌐location") {
 
 			$option = array(
-				array($telegram->buildKeyboardButton("Invia la tua posizione / send your location", false, true)) //this work
+				array($telegram->buildKeyboardButton("Send your location", false, true))
 			);
 			// Create a permanent custom keyboard
 			$keyb = $telegram->buildKeyBoard($option, $onetime = false);
-			$content = array('chat_id' => $chat_id, 'reply_markup' => $keyb, 'text' => "Attiva la localizzazione sul tuo smartphone / Turn on your GPS");
+			$content = array('chat_id' => $chat_id, 'reply_markup' => $keyb, 'text' => "Turn on your GPS");
 			$telegram->sendMessage($content);
 			exit;
-		} else if ($text == "/istruzioni" || $text == "istruzioni" || $text == "❓istruzioni") {
+		} else if ($text == "/instruction" || $text == "instruction" || $text == "❓instruction") {
 
-			$img = curl_file_create('istruzioni.png', 'image/png');
-			$contentp = array('chat_id' => $chat_id, 'photo' => $img);
-			$telegram->sendPhoto($contentp);
-			$content = array('chat_id' => $chat_id, 'text' => "[Immagine realizzata da Alessandro Ghezzer]");
+			//	$img = curl_file_create('istruzioni.png', 'image/png');
+			//	$contentp = array('chat_id' => $chat_id, 'photo' => $img);
+			//	$telegram->sendPhoto($contentp);
+			//	$content = array('chat_id' => $chat_id, 'text' => "[Immagine realizzata da Alessandro Ghezzer]");
+			//	$telegram->sendMessage($content);
+			$content = array('chat_id' => $chat_id, 'text' => "<b>After having sent your position you can add a category</b>\nYou can also add a text to a previous image/file with t:report_number:text\nE.g. <b>t:123:this is a test</b>", 'parse_mode' => "HTML");
 			$telegram->sendMessage($content);
-			$content = array('chat_id' => $chat_id, 'text' => "<b>Dopo che hai inviato la tua posizione puoi aggiungere una categoria!!</b>\nSe hai mandato una foto o file e vuoi aggiungere un testo puoi usare t:numsegnalazione:testo\nEsempio <b>t:123:testo prova</b>", 'parse_mode' => "HTML");
+			$content = array('chat_id' => $chat_id, 'text' => "To remove a report: <b>delete:report_number</b>\n", 'parse_mode' => "HTML");
 			$telegram->sendMessage($content);
-			$content = array('chat_id' => $chat_id, 'text' => "Per cancellare: <b>cancella:numerosegnalazione</b>\n", 'parse_mode' => "HTML");
-			$telegram->sendMessage($content);
-			$link = "http://bit.ly/2N9NDlH";
-			$content = array('chat_id' => $chat_id, 'text' => "<b>Vuoi anche un piccolo video passo passo? clicca </b>" . $link, 'parse_mode' => "HTML");
-			$telegram->sendMessage($content);
-			$log = $today . ",istruzioni," . $chat_id . "\n";
+			// $link = "http://bit.ly/2N9NDlH";
+			// $content = array('chat_id' => $chat_id, 'text' => "<b>Vuoi anche un piccolo video passo passo? clicca </b>" . $link, 'parse_mode' => "HTML");
+			// $telegram->sendMessage($content);
+			$log = $today . ",instruction," . $chat_id . "\n";
 			$this->create_keyboard($telegram, $chat_id);
 			exit;
 		} elseif ($text == "update") {
@@ -90,7 +106,7 @@ class mainloop
 			exec(' sqlite3 -header -csv ' . $db_path . ' "select * from segnalazioni;" > ' . $csv_path . ' ');
 			$this->create_keyboard($telegram, $chat_id);
 			exit;
-		} elseif ($text == "Annulla") {
+		} elseif ($text == "Cancel") {
 			$this->create_keyboard($telegram, $chat_id);
 			exit;
 		} elseif ($text == "aggiorna" || $text == "/aggiorna" || $text == "❌aggiorna") {
@@ -115,14 +131,16 @@ class mainloop
 				$text1 = strtoupper($username);
 				$homepage = "";
 				// il GDRIVEGID è il gid per un google sheet dove c'è l'elenco degli username registrati.
-				$url = "https://spreadsheets.google.com/tq?tqx=out:csv&tq=SELECT%20%2A%20WHERE%20upper(D)%20LIKE%20%27%25" . $text1;
-				$url .= "%25%27%20&key=" . GDRIVEKEY . "&gid=" . GDRIVEGID;
+				$url =  GOOGLE_URL_BASE . "SELECT%20%2A%20WHERE%20upper(D)%20LIKE%20%27%25" . $text1;
+
+			//	$url = "https://spreadsheets.google.com/tq?tqx=out:csv&tq=SELECT%20%2A%20WHERE%20upper(D)%20LIKE%20%27%25" . $text1;
+				$url .= "%25%27%20&gid=" . GDRIVEGID;
 				$csv = array_map('str_getcsv', file($url));
 				$count = 0;
 				foreach ($csv as $data => $csv1) {
 					$count = $count + 1;
 				}
-				if ($count > 1 or $username = "piersoft") // inserire l'admin abilitato alla cancellazione oltre l'utente
+				if ($count > 1 or $username = "pagaia") // inserire l'admin abilitato alla cancellazione oltre l'utente
 				{
 					$statement = "DELETE FROM " . DB_TABLE_GEO . " WHERE bot_request_message ='" . $text . "'";
 					$db->exec($statement);
@@ -131,10 +149,7 @@ class mainloop
 					$telegram->sendMessage($content);
 					exec(' sqlite3 -header -csv ' . $db_path . ' "select * from segnalazioni;" > ' . $csv_path . ' ');
 					$log = $today . ",segnalazione cancellata," . $chat_id . "\n";
-				}
-				// removed this check
-				//else if (FALSE) {
-				else {
+				} else {
 					$content = array('chat_id' => $chat_id, 'text' => $username . ", non risulti essere un utente autorizzato ad aggiornare le segnalazioni.", 'disable_web_page_preview' => true);
 					$telegram->sendMessage($content);
 					$this->create_keyboard($telegram, $chat_id);
@@ -155,8 +170,9 @@ class mainloop
 			} else {
 				$text1 = strtoupper($username);
 				$homepage = "";
-				$url = "https://spreadsheets.google.com/tq?tqx=out:csv&tq=SELECT%20%2A%20WHERE%20upper(D)%20LIKE%20%27%25" . $text1;
-				$url .= "%25%27%20&key=" . GDRIVEKEY . "&gid=" . GDRIVEGID1;
+				//$url = "https://spreadsheets.google.com/tq?tqx=out:csv&tq=SELECT%20%2A%20WHERE%20upper(D)%20LIKE%20%27%25" . $text1;
+				$url =  GOOGLE_URL_BASE . "SELECT%20%2A%20WHERE%20upper(D)%20LIKE%20%27%25" . $text1;
+				$url .= "%25%27%20&gid=" . GDRIVEGID1;
 				$csv = array_map('str_getcsv', file($url));
 				$count = 0;
 				foreach ($csv as $data => $csv1) {
@@ -188,10 +204,7 @@ class mainloop
 					}
 					$content = array('chat_id' => $row[0]['user'], 'text' => $row[0]['username'] . " la tua segnalazione è stata evasa, ti ringraziamo.", 'disable_web_page_preview' => true);
 					$telegram->sendMessage($content);
-				}
-				// removed this check
-				//else if (FALSE) {
-				else {
+				} else {
 					$content = array('chat_id' => $chat_id, 'text' => $username . ", non risulti essere un utente autorizzato ad aggiornare le segnalazioni.", 'disable_web_page_preview' => true);
 					$telegram->sendMessage($content);
 					$this->create_keyboard($telegram, $chat_id);
@@ -212,8 +225,10 @@ class mainloop
 			} else {
 				$text1 = strtoupper($username);
 				$homepage = "";
-				$url = "https://spreadsheets.google.com/tq?tqx=out:csv&tq=SELECT%20%2A%20WHERE%20upper(D)%20LIKE%20%27%25" . $text1;
-				$url .= "%25%27%20&key=" . GDRIVEKEY . "&gid=" . GDRIVEGID1;
+				//$url = "https://spreadsheets.google.com/tq?tqx=out:csv&tq=SELECT%20%2A%20WHERE%20upper(D)%20LIKE%20%27%25" . $text1;
+				
+				$url =  GOOGLE_URL_BASE . "SELECT%20%2A%20WHERE%20upper(D)%20LIKE%20%27%25" . $text1;
+				$url .= "%25%27%20&gid=" . GDRIVEGID1;
 				$csv = array_map('str_getcsv', file($url));
 				$count = 0;
 				foreach ($csv as $data => $csv1) {
@@ -245,9 +260,7 @@ class mainloop
 					}
 					$content = array('chat_id' => $row[0]['user'], 'text' => $row[0]['username'] . " la tua segnalazione è stata presa in gestione, ti ringraziamo.", 'disable_web_page_preview' => true);
 					$telegram->sendMessage($content);
-				} // removed this check
-				//else if (FALSE) {
-				else {
+				} else {
 					$content = array('chat_id' => $chat_id, 'text' => $username . ", non risulti essere un utente autorizzato ad aggiornare le segnalazioni.", 'disable_web_page_preview' => true);
 					$telegram->sendMessage($content);
 					$this->create_keyboard($telegram, $chat_id);
@@ -343,8 +356,12 @@ class mainloop
 			} else {
 				$text = strtoupper($username);
 				$homepage = "";
-				$url = "https://spreadsheets.google.com/tq?tqx=out:csv&tq=SELECT%20%2A%20WHERE%20upper(D)%20LIKE%20%27%25" . $text;
-				$url .= "%25%27%20&key=" . GDRIVEKEY . "&gid=" . GDRIVEGID;
+				//$url = "https://spreadsheets.google.com/tq?tqx=out:csv&tq=SELECT%20%2A%20WHERE%20upper(D)%20LIKE%20%27%25" . $text;
+				$url =  GOOGLE_URL_BASE . "SELECT%20%2A%20WHERE%20upper(D)%20LIKE%20%27%25" . $text;
+				$url .= "%25%27%20&gid=" . GDRIVEGID;
+				$log = $today . ",GOOGLE: ,". $url. " " . $chat_id . "," . $username . "," . $user_id . "\n";
+				file_put_contents(LOG_FILE, $log, FILE_APPEND | LOCK_EX);
+				
 				$csv = array_map('str_getcsv', file($url));
 				$count = 0;
 				foreach ($csv as $data => $csv1) {
@@ -353,10 +370,7 @@ class mainloop
 				if ($count > 1) {
 					$this->location_manager($username, $db, $telegram, $user_id, $chat_id, $location);
 					exit;
-				}
-				// removed this check
-				//else if (FALSE) {
-				else {
+				} else {
 					$content = array('chat_id' => $chat_id, 'text' => $username . ", non risulti essere un utente autorizzato ad inviare le segnalazioni. Compila questo form: https://goo.gl/forms/jHF32JX6K7V2mkkk2.", 'disable_web_page_preview' => true);
 					$telegram->sendMessage($content);
 					$this->create_keyboard($telegram, $chat_id);
@@ -397,8 +411,7 @@ class mainloop
 				$file_id = $response["message"]["photo"][2]["file_id"];
 
 				if ($file_id != NULL) {
-					$telegramtk = TELEGRAM_BOT_TOKEN;
-					$rawData = file_get_contents("https://api.telegram.org/bot" . $telegramtk . "/getFile?file_id=" . $file_id);
+					$rawData = file_get_contents("https://api.telegram.org/bot" . TELEGRAM_BOT_TOKEN . "/getFile?file_id=" . $file_id);
 					$obj = json_decode($rawData, true);
 					$file_path = $obj["result"]["file_path"];
 					$caption = $response["message"]["caption"];
@@ -475,7 +488,7 @@ class mainloop
 				$content = array('chat_id' => GRUPPO, 'text' => "Segnalazione in arrivo numero " . $reply_to_msg['message_id'] . " da parte dell'utente @" . $username . " il " . $today . "\n" . $mappa . $linkfile . "\n" . $text);
 				$telegram->sendMessage($content);
 				// STANDARD //
-				$option = array(["😡Vandalismo\n:" . $reply_to_msg['message_id'] . ":", "♿️Buche\n:" . $reply_to_msg['message_id'] . ":"], ["🌲Rifiuti\n:" . $reply_to_msg['message_id'] . ":", "💡Palo luce\n:" . $reply_to_msg['message_id'] . ":"], ["Annulla"]);
+				$option = array(["😡Vandalismo\n:" . $reply_to_msg['message_id'] . ":", "♿️Buche\n:" . $reply_to_msg['message_id'] . ":"], ["🌲Rifiuti\n:" . $reply_to_msg['message_id'] . ":", "💡Palo luce\n:" . $reply_to_msg['message_id'] . ":"], ["Cancel"]);
 				$keyb = $telegram->buildKeyBoard($option, $onetime = true);
 				$content = array('chat_id' => $chat_id, 'reply_markup' => $keyb, 'text' => "[guarda la mappa delle segnalazioni su " . SERVER . " oppure aggiungi una categoria:]");
 				$telegram->sendMessage($content);
@@ -503,7 +516,7 @@ class mainloop
 	// Crea la tastiera
 	function create_keyboard($telegram, $chat_id)
 	{
-		$option = array(["❓istruzioni", "©️info"]);
+		$option = array(["❓instruction", "©️info"]);
 		$keyb = $telegram->buildKeyBoard($option, $onetime = true);
 		$content = array('chat_id' => $chat_id, 'reply_markup' => $keyb, 'text' => "[guarda la mappa delle segnalazioni su " . SERVER . "/ oppure invia la tua segnalazione cliccando \xF0\x9F\x93\x8E]");
 		$telegram->sendMessage($content);
