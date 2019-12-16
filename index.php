@@ -205,7 +205,7 @@
 			cache: false,
 			url: 'db/map_data.txt',
 			error: function() {
-				alert('Impossible to load tha dataset. Please try again');
+				alert('Impossible to load the dataset. Please try again');
 			},
 			success: function(csv) {
 				var cluster = new L.MarkerClusterGroup({
