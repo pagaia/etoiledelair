@@ -33,6 +33,7 @@ class mainloop
 		$location = $update["message"]["location"];
 		$reply_to_msg = $update["message"]["reply_to_message"];
 		$username = $update["message"]["from"]["username"];
+
 		$this->shell($username, $telegram, $db, $first_name, $text, $chat_id, $user_id, $location, $reply_to_msg);
 		//$db = NULL;
 
@@ -44,25 +45,29 @@ class mainloop
 
 		$csv_path = CSV_PATH;
 		$db_path = DB_PATH;
-		date_default_timezone_set('Europe/Rome');
+		date_default_timezone_set('Europe/Brussels');
 		$today = date("Y-m-d H:i:s");
 
-		//$text = strtoupper($text);
+		// convert text to UPPER CASE only if not a T: commanda
+		if (strpos($text, 'T:') == false) {
+			$text = strtoupper($text);
+		}
 
-		if ($text == "/start" || $text == "info" || $text == "©️info") {
-			$reply = `Welcome $first_name 
-			This Bot has been adapted by @pagaia from a previous version of @piersoft as a support tool to get reports about issues in the city.
+		if ($text == "/START" || $text == "INFO" || $text == "©️INFO") {
+			$reply = "Welcome $first_name 
+			This Bot has been adapted by @pagaia as support tool to get reports about issues in the city.
 			In particular it is used to report sensitive areas/points in some streets for the normal way to and from school in order to help the Filter Cafe Filtre of Etterbeek
 			to localize in a simple and shared way the information.
 			The author is not responsible for the improper use of this tool and the contents of the users.
 			
-			La mappatura è abilitata solo per utenti che hanno \"username\" (univoci su Telegram tramite la sua sezione Impostazioni) 
-			e vengono registrati e visualizzati pubblicamente su mappa con licenza CC0 (pubblico dominio).
-			Per partecipare bisogna compilare il seguente form: https://goo.gl/forms/jHF32JX6K7V2mkkk2.
+			Only registered users with a Telegram \"username\" can add report. All reports are registered with the username and can be
+			publicily accessed on map with CC0 (public domain) license.
+			To partecipate please fill the following form: https://forms.gle/mVjCWrdGbETrhZk76.
 				
-			La geocodifca dei dati avviene grazie al database Nominatim di openStreeMap con licenza oDBL.
-			Tutti i dati sono in licenza CC0 in formato CSV su http://bit.ly/2MGxRPP.
-			Icone della mappa realizzate da Francesco Lanotte"`;
+			The address geocoding is achieved thanks to the OpenStreetMap Nominatim database with oDBL license.
+			The map icons have been created by Francesco Lanotte";
+
+
 			$content = array('chat_id' => $chat_id, 'text' => $reply, 'disable_web_page_preview' => true);
 			$telegram->sendMessage($content);
 
@@ -73,7 +78,7 @@ class mainloop
 			$log = $today . ",new chat started," . $chat_id . "\n";
 			$this->create_keyboard($telegram, $chat_id);
 			exit;
-		} elseif ($text == "/location" || $text == "🌐location") {
+		} elseif ($text == "/LOCATION" || $text == "🌐location") {
 
 			$option = array(
 				array($telegram->buildKeyboardButton("Send your location", false, true))
@@ -83,7 +88,7 @@ class mainloop
 			$content = array('chat_id' => $chat_id, 'reply_markup' => $keyb, 'text' => "Turn on your GPS");
 			$telegram->sendMessage($content);
 			exit;
-		} else if ($text == "/instruction" || $text == "instruction" || $text == "❓instruction") {
+		} else if ($text == "/INSTRUCTION" || $text == "INSTRUCTION" || $text == "❓INSTRUCTION") {
 
 			//	$img = curl_file_create('istruzioni.png', 'image/png');
 			//	$contentp = array('chat_id' => $chat_id, 'photo' => $img);
@@ -100,41 +105,34 @@ class mainloop
 			$log = $today . ",instruction," . $chat_id . "\n";
 			$this->create_keyboard($telegram, $chat_id);
 			exit;
-		} elseif ($text == "update") {
+		} elseif ($text == "UPDATEDB") {
 			$statement = "DELETE FROM " . DB_TABLE_GEO . " WHERE username =' '";
 			$db->exec($statement);
 			exec(' sqlite3 -header -csv ' . $db_path . ' "select * from segnalazioni;" > ' . $csv_path . ' ');
 			$this->create_keyboard($telegram, $chat_id);
 			exit;
-		} elseif ($text == "Cancel") {
+		} elseif ($text == "CANCEL") {
 			$this->create_keyboard($telegram, $chat_id);
 			exit;
-		} elseif ($text == "aggiorna" || $text == "/aggiorna" || $text == "❌aggiorna") {
+		} elseif ($text == "UPDATE" || $text == "/UPDATE" || $text == "❌UPDATE") {
 
-			$reply = "Per aggiornare una segnalazione digita a:numerosegnalazione, esempio a:699";
+			$reply = "To update a report select a:reportNumber, e.g. a:699";
 			$content = array('chat_id' => $chat_id, 'text' => $reply);
 			$telegram->sendMessage($content);
 			$this->create_keyboard($telegram, $chat_id);
 			exit;
-		} elseif (strpos($text, 'cancella:') !== false) {
-			$text = str_replace("cancella:", "", $text);
+		} elseif (strpos($text, 'DELETE:') !== false) {
+			$text = str_replace("DELETE:", "", $text);
 			$text = str_replace(" ", "", $text);
 
 			if ($username == "") {
-				$content = array('chat_id' => $chat_id, 'text' => "Devi obbligatoriamente impostare il tuo username nelle impostazioni di Telegram", 'disable_web_page_preview' => true);
-				$telegram->sendMessage($content);
-				$log = $today . ",nousernameset," . $chat_id . "," . $username . "," . $user_id . "\n";
-				file_put_contents(LOG_FILE, $log, FILE_APPEND | LOCK_EX);
-				$this->create_keyboard($telegram, $chat_id);
-				exit;
+				$this->returnUsernameError($today, $telegram, $user_id, $chat_id);
 			} else {
 				$text1 = strtoupper($username);
 				$homepage = "";
 				// il GDRIVEGID è il gid per un google sheet dove c'è l'elenco degli username registrati.
 				$url =  GOOGLE_URL_BASE . "SELECT%20%2A%20WHERE%20upper(D)%20LIKE%20%27%25" . $text1;
-
-			//	$url = "https://spreadsheets.google.com/tq?tqx=out:csv&tq=SELECT%20%2A%20WHERE%20upper(D)%20LIKE%20%27%25" . $text1;
-				$url .= "%25%27%20&gid=" . GDRIVEGID;
+				$url .= "%25%27%20&gid=" . GDRIVEGIDADMIN;
 				$csv = array_map('str_getcsv', file($url));
 				$count = 0;
 				foreach ($csv as $data => $csv1) {
@@ -144,7 +142,7 @@ class mainloop
 				{
 					$statement = "DELETE FROM " . DB_TABLE_GEO . " WHERE bot_request_message ='" . $text . "'";
 					$db->exec($statement);
-					$reply = "La segnalazione n° " . $text . " è stata cancellata";
+					$reply = "The report n° " . $text . " has been deleted";
 					$content = array('chat_id' => $chat_id, 'text' => $reply);
 					$telegram->sendMessage($content);
 					exec(' sqlite3 -header -csv ' . $db_path . ' "select * from segnalazioni;" > ' . $csv_path . ' ');
@@ -156,23 +154,17 @@ class mainloop
 					exit;
 				}
 			}
-		} elseif (strpos($text, 'e:') !== false) {
-			$text = str_replace("e:", "", $text);
+		} elseif (strpos($text, 'E:') !== false) {
+			$text = str_replace("E:", "", $text);
 			$text = str_replace(" ", "", $text);
 
 			if ($username == "") {
-				$content = array('chat_id' => $chat_id, 'text' => "Devi obbligatoriamente impostare il tuo username nelle impostazioni di Telegram", 'disable_web_page_preview' => true);
-				$telegram->sendMessage($content);
-				$log = $today . ",nousernameset," . $chat_id . "," . $username . "," . $user_id . "\n";
-				file_put_contents(LOG_FILE, $log, FILE_APPEND | LOCK_EX);
-				$this->create_keyboard($telegram, $chat_id);
-				exit;
+				$this->returnUsernameError($today, $telegram, $user_id, $chat_id);
 			} else {
 				$text1 = strtoupper($username);
 				$homepage = "";
-				//$url = "https://spreadsheets.google.com/tq?tqx=out:csv&tq=SELECT%20%2A%20WHERE%20upper(D)%20LIKE%20%27%25" . $text1;
 				$url =  GOOGLE_URL_BASE . "SELECT%20%2A%20WHERE%20upper(D)%20LIKE%20%27%25" . $text1;
-				$url .= "%25%27%20&gid=" . GDRIVEGID1;
+				$url .= "%25%27%20&gid=" . GDRIVEGIDADMIN;
 				$csv = array_map('str_getcsv', file($url));
 				$count = 0;
 				foreach ($csv as $data => $csv1) {
@@ -211,24 +203,17 @@ class mainloop
 					exit;
 				}
 			}
-		} elseif (strpos($text, 'a:') !== false) {
-			$text = str_replace("a:", "", $text);
+		} elseif (strpos($text, 'A:') !== false) {
+			$text = str_replace("A:", "", $text);
 			$text = str_replace(" ", "", $text);
 
 			if ($username == "") {
-				$content = array('chat_id' => $chat_id, 'text' => "Devi obbligatoriamente impostare il tuo username nelle impostazioni di Telegram", 'disable_web_page_preview' => true);
-				$telegram->sendMessage($content);
-				$log = $today . ",nousernameset," . $chat_id . "," . $username . "," . $user_id . "\n";
-				file_put_contents(LOG_FILE, $log, FILE_APPEND | LOCK_EX);
-				$this->create_keyboard($telegram, $chat_id);
-				exit;
+				$this->returnUsernameError($today, $telegram, $user_id, $chat_id);
 			} else {
 				$text1 = strtoupper($username);
 				$homepage = "";
-				//$url = "https://spreadsheets.google.com/tq?tqx=out:csv&tq=SELECT%20%2A%20WHERE%20upper(D)%20LIKE%20%27%25" . $text1;
-				
 				$url =  GOOGLE_URL_BASE . "SELECT%20%2A%20WHERE%20upper(D)%20LIKE%20%27%25" . $text1;
-				$url .= "%25%27%20&gid=" . GDRIVEGID1;
+				$url .= "%25%27%20&gid=" . GDRIVEGIDADMIN;
 				$csv = array_map('str_getcsv', file($url));
 				$count = 0;
 				foreach ($csv as $data => $csv1) {
@@ -238,7 +223,7 @@ class mainloop
 
 					$statement = "UPDATE " . DB_TABLE_GEO . " SET aggiornata='gestita' WHERE bot_request_message ='" . $text . "'";
 					$db->exec($statement);
-					$reply = "Segnalazione n° " . $text . " è stata aggiornata";
+					$reply = "Report n° " . $text . " has been updated";
 					$content = array('chat_id' => $chat_id, 'text' => $reply);
 					$telegram->sendMessage($content);
 					exec(' sqlite3 -header -csv ' . $db_path . ' "select * from segnalazioni;" > ' . $csv_path . ' ');
@@ -258,10 +243,10 @@ class mainloop
 
 						$i++;
 					}
-					$content = array('chat_id' => $row[0]['user'], 'text' => $row[0]['username'] . " la tua segnalazione è stata presa in gestione, ti ringraziamo.", 'disable_web_page_preview' => true);
+					$content = array('chat_id' => $row[0]['user'], 'text' => $row[0]['username'] . " your report has been taken into account, thank you.", 'disable_web_page_preview' => true);
 					$telegram->sendMessage($content);
 				} else {
-					$content = array('chat_id' => $chat_id, 'text' => $username . ", non risulti essere un utente autorizzato ad aggiornare le segnalazioni.", 'disable_web_page_preview' => true);
+					$content = array('chat_id' => $chat_id, 'text' => $username . ", you don't seem to be an autorized to update reports.", 'disable_web_page_preview' => true);
 					$telegram->sendMessage($content);
 					$this->create_keyboard($telegram, $chat_id);
 					exit;
@@ -294,16 +279,8 @@ class mainloop
 			$text = str_replace("🎢", ":", $text);
 			$text = str_replace("😡", ":", $text);
 
-			function extractString($string, $start, $end)
-			{
-				$string = " " . $string;
-				$ini = strpos($string, $start);
-				if ($ini == 0) return "";
-				$ini += strlen($start);
-				$len = strpos($string, $end, $ini) - $ini;
-				return substr($string, $ini, $len);
-			}
-			$id = extractString($text, ":", ":");
+
+			$id = $this->extractString($text, ":", ":");
 			$text = str_replace($id, "", $text);
 			$text = str_replace(":", "", $text);
 			$text = str_replace(",", "", $text);
@@ -317,19 +294,10 @@ class mainloop
 			$log = $today . ",forza_debolezza_aggiornata," . $chat_id . "\n";
 			$this->create_keyboard($telegram, $chat_id);
 			exit;
-		} elseif (strpos($text, 't:') !== false || strpos($text, 'T:') !== false) {
-			$text = str_replace("t:", ":", $text);
+		} elseif (strpos($text, 'T:') !== false) {
 			$text = str_replace("T:", ":", $text);
-			function extractString($string, $start, $end)
-			{
-				$string = " " . $string;
-				$ini = strpos($string, $start);
-				if ($ini == 0) return "";
-				$ini += strlen($start);
-				$len = strpos($string, $end, $ini) - $ini;
-				return substr($string, $ini, $len);
-			}
-			$id = extractString($text, ":", ":");
+			$id = $this->extractString($text, ":", ":");
+
 			$text = str_replace($id, "", $text);
 			$text = str_replace(":", "", $text);
 			$text = str_replace(",", "", $text);
@@ -347,21 +315,15 @@ class mainloop
 		//gestione segnalazioni georiferite
 		elseif ($location != null) {
 			if ($username == "") {
-				$content = array('chat_id' => $chat_id, 'text' => "Devi obbligatoriamente impostare il tuo username nelle impostazioni di Telegram", 'disable_web_page_preview' => true);
-				$telegram->sendMessage($content);
-				$log = $today . ",nousernameset," . $chat_id . "," . $username . "," . $user_id . "\n";
-				file_put_contents(LOG_FILE, $log, FILE_APPEND | LOCK_EX);
-				$this->create_keyboard($telegram, $chat_id);
-				exit;
+				$this->returnUsernameError($today, $telegram, $user_id, $chat_id);
 			} else {
 				$text = strtoupper($username);
 				$homepage = "";
-				//$url = "https://spreadsheets.google.com/tq?tqx=out:csv&tq=SELECT%20%2A%20WHERE%20upper(D)%20LIKE%20%27%25" . $text;
 				$url =  GOOGLE_URL_BASE . "SELECT%20%2A%20WHERE%20upper(D)%20LIKE%20%27%25" . $text;
 				$url .= "%25%27%20&gid=" . GDRIVEGID;
-				$log = $today . ",GOOGLE: ,". $url. " " . $chat_id . "," . $username . "," . $user_id . "\n";
+				$log = $today . ",GOOGLE: ," . $url . " " . $chat_id . "," . $username . "," . $user_id . "\n";
 				file_put_contents(LOG_FILE, $log, FILE_APPEND | LOCK_EX);
-				
+
 				$csv = array_map('str_getcsv', file($url));
 				$count = 0;
 				foreach ($csv as $data => $csv1) {
@@ -371,14 +333,10 @@ class mainloop
 					$this->location_manager($username, $db, $telegram, $user_id, $chat_id, $location);
 					exit;
 				} else {
-					$content = array('chat_id' => $chat_id, 'text' => $username . ", non risulti essere un utente autorizzato ad inviare le segnalazioni. Compila questo form: https://goo.gl/forms/jHF32JX6K7V2mkkk2.", 'disable_web_page_preview' => true);
-					$telegram->sendMessage($content);
-					$this->create_keyboard($telegram, $chat_id);
-					exit;
+					$this->returnFormToFill($today, $username, $telegram, $user_id, $chat_id);
 				}
 			}
-		} else //($reply_to_msg != NULL)
-		{
+		} else {
 			if ($reply_to_msg != NULL) {
 
 				$response = $telegram->getData();
@@ -487,6 +445,7 @@ class mainloop
 				if ($file_id == null) $linkfile = "";
 				$content = array('chat_id' => GRUPPO, 'text' => "Segnalazione in arrivo numero " . $reply_to_msg['message_id'] . " da parte dell'utente @" . $username . " il " . $today . "\n" . $mappa . $linkfile . "\n" . $text);
 				$telegram->sendMessage($content);
+
 				// STANDARD //
 				$option = array(["😡Vandalismo\n:" . $reply_to_msg['message_id'] . ":", "♿️Buche\n:" . $reply_to_msg['message_id'] . ":"], ["🌲Rifiuti\n:" . $reply_to_msg['message_id'] . ":", "💡Palo luce\n:" . $reply_to_msg['message_id'] . ":"], ["Cancel"]);
 				$keyb = $telegram->buildKeyBoard($option, $onetime = true);
@@ -494,10 +453,9 @@ class mainloop
 				$telegram->sendMessage($content);
 			}
 			//comando errato
-
 			else {
 
-				$reply = "Hai selezionato un comando non previsto. Ricordati che devi prima inviare la tua posizione";
+				$reply = "Command not recognized. Please send first your position";
 				$content = array('chat_id' => $chat_id, 'text' => $reply);
 				$telegram->sendMessage($content);
 
@@ -511,6 +469,15 @@ class mainloop
 		exec(' sqlite3 -header -csv ' . $db_path . ' "select * from segnalazioni;" > ' . $csv_path . ' ');
 	}
 
+	function extractString($string, $start, $end)
+	{
+		$string = " " . $string;
+		$ini = strpos($string, $start);
+		if ($ini == 0) return "";
+		$ini += strlen($start);
+		$len = strpos($string, $end, $ini) - $ini;
+		return substr($string, $ini, $len);
+	}
 
 
 	// Crea la tastiera
@@ -518,23 +485,40 @@ class mainloop
 	{
 		$option = array(["❓instruction", "©️info"]);
 		$keyb = $telegram->buildKeyBoard($option, $onetime = true);
-		$content = array('chat_id' => $chat_id, 'reply_markup' => $keyb, 'text' => "[guarda la mappa delle segnalazioni su " . SERVER . "/ oppure invia la tua segnalazione cliccando \xF0\x9F\x93\x8E]");
+		$content = array('chat_id' => $chat_id, 'reply_markup' => $keyb, 'text' => "[see reports map on " . SERVER . "/ or send your report selecting \xF0\x9F\x93\x8E]");
 		$telegram->sendMessage($content);
 	}
 
 
+	// this function return the username error
+	function returnUsernameError($today, $telegram, $user_id, $chat_id)
+	{
+		$content = array('chat_id' => $chat_id, 'text' => "You have to set your username into Telegram settings", 'disable_web_page_preview' => true);
+		$telegram->sendMessage($content);
+		$log = $today . ",nousernameset," . $chat_id . ", NULL," . $user_id . "\n";
+		file_put_contents(LOG_FILE, $log, FILE_APPEND | LOCK_EX);
+		$this->create_keyboard($telegram, $chat_id);
+		exit;
+	}
+
+	// this function return the username error
+	function returnFormToFill($today, $username, $telegram, $user_id, $chat_id)
+	{
+		$content = array('chat_id' => $chat_id, 'text' => $username . ", it does not appear to be a user authorized to send reports. Fill out this form: https://forms.gle/mVjCWrdGbETrhZk76", 'disable_web_page_preview' => true);
+		$telegram->sendMessage($content);
+		$log = $today . ",not autorized," . $chat_id . ", " . $username . "," . $user_id . "\n";
+		file_put_contents(LOG_FILE, $log, FILE_APPEND | LOCK_EX);
+		$this->create_keyboard($telegram, $chat_id);
+		exit;
+	}
+
 
 	function location_manager($username, $db, $telegram, $user_id, $chat_id, $location)
 	{
-		date_default_timezone_set('Europe/Rome');
+		date_default_timezone_set('Europe/Brussels');
 		$today = date("Y-m-d H:i:s");
 		if ($username == "") {
-			$content = array('chat_id' => $chat_id, 'text' => "Devi obbligatoriamente impostare il tuo username nelle impostazioni di Telegram", 'disable_web_page_preview' => true);
-			$telegram->sendMessage($content);
-			$log = $today . ",nousernameset," . $chat_id . "," . $username . "," . $user_id . "\n";
-			file_put_contents(LOG_FILE, $log, FILE_APPEND | LOCK_EX);
-			$this->create_keyboard($telegram, $chat_id);
-			exit;
+			$this->returnUsernameError($today, $telegram, $user_id, $chat_id);
 		} else {
 			$lng = $location["longitude"];
 			$lat = $location["latitude"];

@@ -137,7 +137,6 @@
 			maxZoom: 20,
 			attribution: 'Map Data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors'
 		}).addTo(mapa);
-		var icona = "icon.png";
 		var bankias = L.geoCsv(null, {
 			firstLineTitles: true,
 			fieldSeparator: ',',
@@ -175,6 +174,7 @@
 				layer.bindPopup(popup);
 			},
 			pointToLayer: function(feature, latlng) {
+				var icona = "icon.png";
 
 				if (feature.properties.categoria == "Civico") icona = "icons/CIVICO.png";
 				if (feature.properties.categoria == "Rifiuti") icona = "icons/RIFIUTI.png";
