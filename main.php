@@ -42,13 +42,15 @@ class mainloop
 	//gestisce l'interfaccia utente
 	function shell($username, $telegram, $db, $first_name, $text, $chat_id, $user_id, $location, $reply_to_msg)
 	{
-
 		$csv_path = CSV_PATH;
 		$db_path = DB_PATH;
 		date_default_timezone_set('Europe/Brussels');
 		$today = date("Y-m-d H:i:s");
 
-		// convert text to UPPER CASE only if not a T: commanda
+		$log = $today . ",Message: ," . $username . "," .  $text . "," . $chat_id . "," . $user_id . "," . $location . "," . print_r($reply_to_msg, TRUE)  . "\n";
+		file_put_contents(LOG_FILE, $log, FILE_APPEND | LOCK_EX);
+
+		// convert text to UPPER CASE only if not a T: command
 		if (strpos($text, 'T:') == false) {
 			$text = strtoupper($text);
 		}
@@ -148,10 +150,7 @@ class mainloop
 					exec(' sqlite3 -header -csv ' . $db_path . ' "select * from segnalazioni;" > ' . $csv_path . ' ');
 					$log = $today . ",segnalazione cancellata," . $chat_id . "\n";
 				} else {
-					$content = array('chat_id' => $chat_id, 'text' => $username . ", non risulti essere un utente autorizzato ad aggiornare le segnalazioni.", 'disable_web_page_preview' => true);
-					$telegram->sendMessage($content);
-					$this->create_keyboard($telegram, $chat_id);
-					exit;
+					$this->returnUnauthorized($today, $username, $telegram, $user_id, $chat_id);
 				}
 			}
 		} elseif (strpos($text, 'E:') !== false) {
@@ -174,7 +173,7 @@ class mainloop
 
 					$statement = "UPDATE " . DB_TABLE_GEO . " SET aggiornata='evasa' WHERE bot_request_message ='" . $text . "'";
 					$db->exec($statement);
-					$reply = "Segnalazione n° " . $text . " è stata evasa";
+					$reply = "Reporting n° " . $text . " has been taken into account";
 					$content = array('chat_id' => $chat_id, 'text' => $reply);
 					$telegram->sendMessage($content);
 					exec(' sqlite3 -header -csv ' . $db_path . ' "select * from segnalazioni;" > ' . $csv_path . ' ');
@@ -194,13 +193,10 @@ class mainloop
 
 						$i++;
 					}
-					$content = array('chat_id' => $row[0]['user'], 'text' => $row[0]['username'] . " la tua segnalazione è stata evasa, ti ringraziamo.", 'disable_web_page_preview' => true);
+					$content = array('chat_id' => $row[0]['user'], 'text' => "Dear " . $row[0]['username'] . " your reporting has been taken into account, thank you.", 'disable_web_page_preview' => true);
 					$telegram->sendMessage($content);
 				} else {
-					$content = array('chat_id' => $chat_id, 'text' => $username . ", non risulti essere un utente autorizzato ad aggiornare le segnalazioni.", 'disable_web_page_preview' => true);
-					$telegram->sendMessage($content);
-					$this->create_keyboard($telegram, $chat_id);
-					exit;
+					$this->returnUnauthorized($today, $username, $telegram, $user_id, $chat_id);
 				}
 			}
 		} elseif (strpos($text, 'A:') !== false) {
@@ -246,6 +242,7 @@ class mainloop
 					$content = array('chat_id' => $row[0]['user'], 'text' => $row[0]['username'] . " your report has been taken into account, thank you.", 'disable_web_page_preview' => true);
 					$telegram->sendMessage($content);
 				} else {
+					$this->returnFormToFill($today, $username, $telegram, $user_id, $chat_id);
 					$content = array('chat_id' => $chat_id, 'text' => $username . ", you don't seem to be an autorized to update reports.", 'disable_web_page_preview' => true);
 					$telegram->sendMessage($content);
 					$this->create_keyboard($telegram, $chat_id);
@@ -304,7 +301,7 @@ class mainloop
 			$statement = "UPDATE " . DB_TABLE_GEO . " SET text='" . $text . "' WHERE bot_request_message ='" . $id . "' AND username='" . $username . "'";
 			//	print_r($reply_to_msg['message_id']);
 			$db->exec($statement);
-			$reply = "Segnalazione n° " . $id . " è stata aggiornata con il testo (solo se sei stato tu l'utente segnalante)";
+			$reply = "Report n° " . $id . " has been updated with text (only if you are the reporter)";
 			$content = array('chat_id' => $chat_id, 'text' => $reply);
 			$telegram->sendMessage($content);
 			exec(' sqlite3 -header -csv ' . $db_path . ' "select * from segnalazioni;" > ' . $csv_path . ' ');
@@ -341,6 +338,9 @@ class mainloop
 
 				$response = $telegram->getData();
 
+				$log = $today . ",response," . $chat_id . ", " . $username . "," . $user_id . "," .  print_r($response, TRUE) . "\n";
+				file_put_contents(LOG_FILE, $log, FILE_APPEND | LOCK_EX);
+
 				$type = $response["message"]["video"]["file_id"];
 				$text = $response["message"]["text"];
 				$risposta = "";
@@ -354,9 +354,7 @@ class mainloop
 					$file_id = $type;
 					//$text="video allegato";
 					//$risposta="ID dell'allegato:".$file_id."\n";
-					$content = array('chat_id' => $chat_id, 'text' => "Non è possibile inviare video direttamente ma devi cliccare \xF0\x9F\x93\x8E e poi File");
-
-					//$content = array('chat_id' => $chat_id, 'text' => "per inviare un video devi cliccare \xF0\x9F\x93\x8E e poi File");
+					$content = array('chat_id' => $chat_id, 'text' => "Is not possible to send video directly, first you have to select \xF0\x9F\x93\x8E and then File");
 					$telegram->sendMessage($content);
 					$this->create_keyboard($telegram, $chat_id);
 					$statement = "DELETE FROM " . DB_TABLE_GEO . " where bot_request_message = '" . $reply_to_msg['message_id'] . "'";
@@ -374,24 +372,24 @@ class mainloop
 					$file_path = $obj["result"]["file_path"];
 					$caption = $response["message"]["caption"];
 					if ($caption != NULL) $text = $caption;
-					$risposta = "ID dell'allegato: " . $file_id . "\n";
+					$risposta = "Attachment ID: " . $file_id . "\n";
 				}
 				$typed = $response["message"]["document"]["file_id"];
 
 				if ($typed != NULL) {
 					$file_id = $typed;
 					$file_name = $response["message"]["document"]["file_name"];
-					$text = "documento: " . $file_name . " allegato";
-					$risposta = "ID dell'allegato:" . $file_id . "\n";
+					$text = "attached document : " . $file_name;
+					$risposta = "attachment ID:" . $file_id . "\n";
 				}
 
 				$typev = $response["message"]["voice"]["file_id"];
 
 				if ($typev != NULL) {
 					$file_id = $typev;
-					$text = "audio allegato";
-					$risposta = "ID dell'allegato:" . $file_id . "\n";
-					$content = array('chat_id' => $chat_id, 'text' => "Non è possibile inviare file audio");
+					$text = "attached audio";
+					$risposta = "attachment ID:" . $file_id . "\n";
+					$content = array('chat_id' => $chat_id, 'text' => "It is not possible to send audio file");
 					$telegram->sendMessage($content);
 					$this->create_keyboard($telegram, $chat_id);
 					$statement = "DELETE FROM " . DB_TABLE_GEO . " where bot_request_message = '" . $reply_to_msg['message_id'] . "'";
@@ -423,7 +421,7 @@ class mainloop
 				}
 
 				if ($row[0]['lat'] == "") {
-					$content = array('chat_id' => $chat_id, 'text' => "Errore di georeferenzazione. riprova per cortesia");
+					$content = array('chat_id' => $chat_id, 'text' => "Geocoding error. Please try again.");
 					$telegram->sendMessage($content);
 					exit;
 				}
@@ -432,24 +430,24 @@ class mainloop
 				print_r($reply_to_msg['message_id']);
 				$db->exec($statement);
 
-				$reply = "La segnalazione n° " . $reply_to_msg['message_id'] . " è stata registrata.\nGrazie!\n";
-				$reply .= "Puoi visualizzarla su :\n" . SERVER . "/#18/" . $row[0]['lat'] . "/" . $row[0]['lng'];
+				$reply = "Report n° " . $reply_to_msg['message_id'] . " has been registered.\nThank you!\n";
+				$reply .= "You can see it at :\n" . SERVER . "/#18/" . $row[0]['lat'] . "/" . $row[0]['lng'];
 				$content = array('chat_id' => $chat_id, 'text' => $reply);
 				$telegram->sendMessage($content);
 
 				$log = $today . ",information for maps recorded," . $chat_id . "\n";
 
 				exec(' sqlite3 -header -csv ' . $db_path . ' "select * from segnalazioni;" > ' . $csv_path . ' ');
-				$mappa = "Puoi visualizzarla su :\n" . SERVER . "/#18/" . $row[0]['lat'] . "/" . $row[0]['lng'];
-				$linkfile = "\nScarica foto:\n" . SERVER . "/allegato.php?id=" . $file_id;
+				$mappa = "You can see it on :\n" . SERVER . "/#18/" . $row[0]['lat'] . "/" . $row[0]['lng'];
+				$linkfile = "\nDownload image:\n" . SERVER . "/allegato.php?id=" . $file_id;
 				if ($file_id == null) $linkfile = "";
-				$content = array('chat_id' => GRUPPO, 'text' => "Segnalazione in arrivo numero " . $reply_to_msg['message_id'] . " da parte dell'utente @" . $username . " il " . $today . "\n" . $mappa . $linkfile . "\n" . $text);
+				$content = array('chat_id' => GRUPPO, 'text' => "A new report is coming n. " . $reply_to_msg['message_id'] . " from user  @" . $username . " on " . $today . "\n" . $mappa . $linkfile . "\n" . $text);
 				$telegram->sendMessage($content);
 
 				// STANDARD //
 				$option = array(["😡Vandalismo\n:" . $reply_to_msg['message_id'] . ":", "♿️Buche\n:" . $reply_to_msg['message_id'] . ":"], ["🌲Rifiuti\n:" . $reply_to_msg['message_id'] . ":", "💡Palo luce\n:" . $reply_to_msg['message_id'] . ":"], ["Cancel"]);
 				$keyb = $telegram->buildKeyBoard($option, $onetime = true);
-				$content = array('chat_id' => $chat_id, 'reply_markup' => $keyb, 'text' => "[guarda la mappa delle segnalazioni su " . SERVER . " oppure aggiungi una categoria:]");
+				$content = array('chat_id' => $chat_id, 'reply_markup' => $keyb, 'text' => "[see the reports map at " . SERVER . " or add a category:]");
 				$telegram->sendMessage($content);
 			}
 			//comando errato
@@ -501,10 +499,23 @@ class mainloop
 		exit;
 	}
 
+	/**
+	 * return unauthorised user message and exit
+	 */
+	function returnUnauthorized($today, $username, $telegram, $user_id, $chat_id)
+	{
+		$content = array('chat_id' => $chat_id, 'text' => $username . ", you don't seem to be an autorized to update reports.", 'disable_web_page_preview' => true);
+		$telegram->sendMessage($content);
+		$log = $today . ",unauthorised," . $chat_id . ", " . $username . "," . $user_id . "\n";
+		file_put_contents(LOG_FILE, $log, FILE_APPEND | LOCK_EX);
+		$this->create_keyboard($telegram, $chat_id);
+		exit;
+	}
+
 	// this function return the username error
 	function returnFormToFill($today, $username, $telegram, $user_id, $chat_id)
 	{
-		$content = array('chat_id' => $chat_id, 'text' => $username . ", it does not appear to be a user authorized to send reports. Fill out this form: https://forms.gle/mVjCWrdGbETrhZk76", 'disable_web_page_preview' => true);
+		$content = array('chat_id' => $chat_id, 'text' => $username . ", you don't appear to be a user authorized to send reports. Fill out this form: https://forms.gle/mVjCWrdGbETrhZk76", 'disable_web_page_preview' => true);
 		$telegram->sendMessage($content);
 		$log = $today . ",not autorized," . $chat_id . ", " . $username . "," . $user_id . "\n";
 		file_put_contents(LOG_FILE, $log, FILE_APPEND | LOCK_EX);
@@ -545,10 +556,10 @@ class mainloop
 			$timec = gmdate("Y-m-d\TH:i:s\Z", $time + ($ms));
 			$timec = str_replace("T", " ", $timec);
 			$timec = str_replace("Z", " ", $timec);
-			$content = array('chat_id' => $chat_id, 'text' => "Cosa vuoi comunicarmi in " . $temp_c1 . "? (" . $lat . "," . $lng . ")", 'reply_markup' => $forcehide, 'reply_to_message_id' => $bot_request_message_id);
+			$content = array('chat_id' => $chat_id, 'text' => "What you want to say at  " . $temp_c1 . "? (" . $lat . "," . $lng . ")", 'reply_markup' => $forcehide, 'reply_to_message_id' => $bot_request_message_id);
 			$bot_request_message = $telegram->sendMessage($content);
 			$forcehide = $telegram->buildForceReply(true);
-			$content = array('chat_id' => $chat_id, 'text' => "[scrivi il tuo messaggio]", 'reply_markup' => $forcehide, 'reply_to_message_id' => $bot_request_message_id);
+			$content = array('chat_id' => $chat_id, 'text' => "[write your message]", 'reply_markup' => $forcehide, 'reply_to_message_id' => $bot_request_message_id);
 			$bot_request_message = $telegram->sendMessage($content);
 			//memorizzare nel DB
 			$obj = json_decode($bot_request_message);
@@ -559,7 +570,7 @@ class mainloop
 			$statement = "INSERT INTO " . DB_TABLE_GEO . " (lat,lng,user,username,text,bot_request_message,time,file_id,file_path,filename,first_name,luogo) VALUES ('" . $lat . "','" . $lng . "','" . $user_id . "',' ',' ','" . $id . "','" . $timec . "',' ',' ',' ',' ','" . $temp_c1 . "')";
 			$stmt = $db->exec($statement);
 			if (!$stmt) {
-				$content = array('chat_id' => $chat_id, 'text' => "errore!!!" . $statement, 'disable_web_page_preview' => true);
+				$content = array('chat_id' => $chat_id, 'text' => "Error!!!" . $statement, 'disable_web_page_preview' => true);
 				$telegram->sendMessage($content);
 			}
 		}

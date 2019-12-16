@@ -26,3 +26,9 @@ To use the application use "start.php getupdates" for manual execution. "start.p
 thanks to my friend Matteo Tempestini.
 
 Good Luck!
+
+## TODO
+
+- add internationalization
+- add multi photo functionality
+
