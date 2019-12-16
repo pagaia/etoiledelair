@@ -48,13 +48,15 @@
 			position: fixed;
 			top: 0;
 			left: 0;
-			width: 100%;
 			height: 100%;
 			background-color: #666;
 			color: #fff;
 			font-size: 2em;
-			padding: 20% 40%;
 			z-index: 10;
+			width: 100%;
+			display: flex;
+			align-items: center;
+			justify-content: center;
 		}
 
 		.boton {
@@ -130,13 +132,15 @@
 	<div id="cargando">Loanding data...</div>
 
 	<script>
-		//;$(function() {
+		$(function() {
 		var mapa = L.map('mapa').setView([46.559, 9.141], 5);
 		var hash = L.hash(mapa);
+
 		L.tileLayer('http://tile.openstreetmap.org/{z}/{x}/{y}.png', {
 			maxZoom: 20,
 			attribution: 'Map Data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors'
 		}).addTo(mapa);
+
 		var bankias = L.geoCsv(null, {
 			firstLineTitles: true,
 			fieldSeparator: ',',
@@ -147,25 +151,25 @@
 				//var title = bankias.getPropertyTitle(clave);
 				//	console.log(feature.properties.username+" lung "+feature.properties.username.length);
 				if (feature.properties.username.length > 2) {
-					popup += 'Utente: <b>' + feature.properties.username + '</b><br />';
+					popup += 'Username: <b>' + feature.properties.username + '</b><br />';
 				} else {
-					if (feature.properties.first_name.length > 2) popup += 'Nome: <b>' + feature.properties.first_name + '</b><br />';
+					if (feature.properties.first_name.length > 2) popup += 'Name: <b>' + feature.properties.first_name + '</b><br />';
 				}
-				if (feature.properties.text.length > 0) popup += 'Messaggio: <b>' + feature.properties.text + '</b><br />';
-				popup += 'del: <b>' + feature.properties.time + '</b><br />';
-				popup += 'numero: <b>' + feature.properties.bot_request_message + '</b><br />';
-				if (feature.properties.categoria.length > 0) popup += 'Categoria: <b>' + feature.properties.categoria + '</b><br />';
+				if (feature.properties.text.length > 0) popup += 'Text: <b>' + feature.properties.text + '</b><br />';
+				popup += 'On: <b>' + feature.properties.time + '</b><br />';
+				popup += 'Number: <b>' + feature.properties.bot_request_message + '</b><br />';
+				if (feature.properties.categoria.length > 0) popup += 'Category: <b>' + feature.properties.categoria + '</b><br />';
 				if (feature.properties.file_id.length > 0) {
 
 					console.log(feature.properties.file_id + " " + feature.properties.bot_request_message);
 					//personalizza il path per il file allegato.php
 					immagine = './allegato.php?id=' + feature.properties.file_id;
 
-					popup += '<b><img src=' + immagine + ' style="width:220px;" alt="25"/></b><br /><b><a href="./allegato.php?id=' + feature.properties.file_id + '" />Scarica allegato</a></b><br />';
+					popup += '<b><img src=' + immagine + ' style="width:220px;" alt="25"/></b><br /><b><a href="./allegato.php?id=' + feature.properties.file_id + '" />Download attachment</a></b><br />';
 
 				}
 				if (feature.properties.aggiornata.length > 0) {
-					popup += 'Stato: <b>' + feature.properties.aggiornata + '</b><br />';
+					popup += 'Status: <b>' + feature.properties.aggiornata + '</b><br />';
 				} //else icona="icon.png";
 				//	for (var clave in feature.properties) {
 				//		var title = bankias.getPropertyTitle(clave);
@@ -224,14 +228,14 @@
 
 		$('#localizame').click(function(e) {
 			mapa.locate();
-			$('#localizame').text('Localizzando...');
+			$('#localizame').text('Localization...');
 			mapa.on('locationfound', function(e) {
 				mapa.setView(e.latlng, 19);
 				$('#localizame').text('trovato');
 			});
 		});
 
-		//});
+		});
 	</script>
 
 </body>
