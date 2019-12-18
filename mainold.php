@@ -104,7 +104,7 @@ class mainloop
 				$homepage = "";
 				// il GDRIVEKEY2 è l'ID per un google sheet dove c'è l'elenco degli username abilitati.
 				$url = "https://spreadsheets.google.com/tq?tqx=out:csv&tq=SELECT%20%2A%20WHERE%20upper(D)%20LIKE%20%27%25" . $text1;
-				$url .= "%25%27%20&key=" . GDRIVEKEY . "&gid=" . GDRIVEGID1;
+				$url .= "%25%27%20&key=" . GDRIVEKEY . "&gid=" . GDRIVEGIDADMIN;
 				//  $url="https://docs.google.com/spreadsheets/d/1r-A2a47HKuy7dUx4YreSmJxI4KQ-fc4v97J-xt5qqqU/gviz/tq?tqx=out:csv&tq=SELECT+*+WHERE+B+LIKE+%27%25VENERD%25%27+AND+A+LIKE+%27%251%25%27";
 				$csv = array_map('str_getcsv', file($url));
 				$count = 0;

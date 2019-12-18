@@ -1,10 +1,10 @@
 # README
 
-I made this bot reusing the code for @comunepulito from @piersoft in order to have a custom application
+I made this bot reusing the code for [@comunepulito](https://github.com/piersoft/comunepulitobot) from [@piersoft](https://github.com/piersoft) in order to have a custom application
 to report points in Bruxelles streets that are perceived as dangerous.
 This project is related to the Filter Cafe Filtre of Bruxelles for health and well living of people in the city
 
-## how to configure the system
+## How to configure the system
 
 In localhost is possible to launch
 php start.php 'sethook' to set start.php as webhook
@@ -13,7 +13,7 @@ php start.php 'getupdates' to run getupdates.php
 
 After setup webhook is possible to use telegram managed by webhost
 
-## how to use the system
+## How to use the system
 
 - Make a Telegram Bot
 - Send Location to it

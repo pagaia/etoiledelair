@@ -3,7 +3,7 @@
 /**
  * Telegram Bot example for mapping points noir in Brussels.
  * @author Francesco Piero Paolicelli
- * @author Remo Moro @pagaia
+ * @author 2019 Remo Moro @pagaia
  */
 include("./settings_t.php");
 include("./Telegram.php");
@@ -50,12 +50,14 @@ class mainloop
 		$log = $today . ",Message: ," . $username . "," .  $text . "," . $chat_id . "," . $user_id . "," . $location . "," . print_r($reply_to_msg, TRUE)  . "\n";
 		file_put_contents(LOG_FILE, $log, FILE_APPEND | LOCK_EX);
 
-		// convert text to UPPER CASE only if not a T: command
+		// convert text to UPPER CASE only if not a T: command to avoid issue on matching
 		if (strpos($text, 'T:') == false) {
 			$text = strtoupper($text);
 		}
 
-		if ($text == "/START" || $text == "INFO" || $text == "©️INFO") {
+		if ($text == 'HELP' || $text == '/HELP') {
+			$this->sendHelp($telegram, $chat_id);
+		} elseif ($text == "/START" || $text == "INFO" || $text == "©️INFO") {
 			$reply = "Welcome $first_name 
 			This Bot has been adapted by @pagaia as support tool to get reports about issues in the city.
 			In particular it is used to report sensitive areas/points in some streets for the normal way to and from school in order to help the Filter Cafe Filtre of Etterbeek
@@ -80,7 +82,7 @@ class mainloop
 			$log = $today . ",new chat started," . $chat_id . "\n";
 			$this->create_keyboard($telegram, $chat_id);
 			exit;
-		} elseif ($text == "/LOCATION" || $text == "🌐location") {
+		} elseif ($text == "/LOCATION" || $text == "🌐LOCATION" || $text == "SEND REPORT") {
 
 			$option = array(
 				array($telegram->buildKeyboardButton("Send your location", false, true))
@@ -97,7 +99,10 @@ class mainloop
 			//	$telegram->sendPhoto($contentp);
 			//	$content = array('chat_id' => $chat_id, 'text' => "[Immagine realizzata da Alessandro Ghezzer]");
 			//	$telegram->sendMessage($content);
-			$content = array('chat_id' => $chat_id, 'text' => "<b>After having sent your position you can add a category</b>\nYou can also add a text to a previous image/file with t:report_number:text\nE.g. <b>t:123:this is a test</b>", 'parse_mode' => "HTML");
+			$content = array('chat_id' => $chat_id, 'text' => "You can select \xF0\x9F\x93\x8E or type location or /location to send a location", 'parse_mode' => "HTML");
+			$telegram->sendMessage($content);
+			//$content = array('chat_id' => $chat_id, 'text' => "<b>After having sent your position you can add a category</b>\nYou can also add a text to a previous image/file with t:report_number:text\nE.g. <b>t:123:this is a test</b>", 'parse_mode' => "HTML");
+			$content = array('chat_id' => $chat_id, 'text' => "You can also add a text to a previous image/file with t:report_number:text\nE.g. <b>t:123:this is a test</b>", 'parse_mode' => "HTML");
 			$telegram->sendMessage($content);
 			$content = array('chat_id' => $chat_id, 'text' => "To remove a report: <b>delete:report_number</b>\n", 'parse_mode' => "HTML");
 			$telegram->sendMessage($content);
@@ -107,6 +112,8 @@ class mainloop
 			$log = $today . ",instruction," . $chat_id . "\n";
 			$this->create_keyboard($telegram, $chat_id);
 			exit;
+		} elseif ($text == "LIST" || $text == "/LIST") {
+			$this->listMyReports($today, $username, $telegram, $user_id, $chat_id);
 		} elseif ($text == "UPDATEDB") {
 			$statement = "DELETE FROM " . DB_TABLE_GEO . " WHERE username =' '";
 			$db->exec($statement);
@@ -123,8 +130,9 @@ class mainloop
 			$telegram->sendMessage($content);
 			$this->create_keyboard($telegram, $chat_id);
 			exit;
-		} elseif (strpos($text, 'DELETE:') !== false) {
+		} elseif (strpos($text, 'DELETE:') !== false || strpos($text, 'D:') !== false) {
 			$text = str_replace("DELETE:", "", $text);
+			$text = str_replace("D:", "", $text);
 			$text = str_replace(" ", "", $text);
 
 			if ($username == "") {
@@ -132,7 +140,7 @@ class mainloop
 			} else {
 				$text1 = strtoupper($username);
 				$homepage = "";
-				// il GDRIVEGID è il gid per un google sheet dove c'è l'elenco degli username registrati.
+				// il GDRIVEGIDADMIN è il gid per un google sheet dove c'è l'elenco degli username registrati ed abilitati alla gestione
 				$url =  GOOGLE_URL_BASE . "SELECT%20%2A%20WHERE%20upper(D)%20LIKE%20%27%25" . $text1;
 				$url .= "%25%27%20&gid=" . GDRIVEGIDADMIN;
 				$csv = array_map('str_getcsv', file($url));
@@ -164,6 +172,8 @@ class mainloop
 				$homepage = "";
 				$url =  GOOGLE_URL_BASE . "SELECT%20%2A%20WHERE%20upper(D)%20LIKE%20%27%25" . $text1;
 				$url .= "%25%27%20&gid=" . GDRIVEGIDADMIN;
+				$log = $today . ",GOOGLE: ," . $url . " " . $chat_id . "," . $username . "," . $user_id . "\n";
+				file_put_contents(LOG_FILE, $log, FILE_APPEND | LOCK_EX);
 				$csv = array_map('str_getcsv', file($url));
 				$count = 0;
 				foreach ($csv as $data => $csv1) {
@@ -210,6 +220,8 @@ class mainloop
 				$homepage = "";
 				$url =  GOOGLE_URL_BASE . "SELECT%20%2A%20WHERE%20upper(D)%20LIKE%20%27%25" . $text1;
 				$url .= "%25%27%20&gid=" . GDRIVEGIDADMIN;
+				$log = $today . ",GOOGLE: ," . $url . " " . $chat_id . "," . $username . "," . $user_id . "\n";
+				file_put_contents(LOG_FILE, $log, FILE_APPEND | LOCK_EX);
 				$csv = array_map('str_getcsv', file($url));
 				$count = 0;
 				foreach ($csv as $data => $csv1) {
@@ -242,11 +254,7 @@ class mainloop
 					$content = array('chat_id' => $row[0]['user'], 'text' => $row[0]['username'] . " your report has been taken into account, thank you.", 'disable_web_page_preview' => true);
 					$telegram->sendMessage($content);
 				} else {
-					$this->returnFormToFill($today, $username, $telegram, $user_id, $chat_id);
-					$content = array('chat_id' => $chat_id, 'text' => $username . ", you don't seem to be an autorized to update reports.", 'disable_web_page_preview' => true);
-					$telegram->sendMessage($content);
-					$this->create_keyboard($telegram, $chat_id);
-					exit;
+					$this->returnUnauthorized($today, $username, $telegram, $user_id, $chat_id);
 				}
 			}
 		} elseif (strpos($text, '😡') !== false || strpos($text, '📕') !== false || strpos($text, '🎢') !== false || strpos($text, '☕️') !== false || strpos($text, '👨‍👨‍👧‍👧') !== false || strpos($text, '👨‍🎓') !== false || strpos($text, '🤩') !== false || strpos($text, '🏫') !== false || strpos($text, '🏛') !== false || strpos($text, '📗') !== false || strpos($text, '♿️') !== false || strpos($text, '👇') !== false || strpos($text, '👍') !== false || strpos($text, '🌲') !== false || strpos($text, '💡') !== false || strpos($text, '🍺') !== false || strpos($text, '🍕') !== false || strpos($text, '1️⃣') !== false || strpos($text, '🏨') !== false) {
@@ -284,7 +292,7 @@ class mainloop
 			$id = $id . $string;
 			$statement = "UPDATE " . DB_TABLE_GEO . " SET categoria='" . $id . "' WHERE bot_request_message ='" . $text . "' AND username='" . $username . "'";
 			$db->exec($statement);
-			$reply = "La mappatura " . $text . " è stata aggiornata con la categoria " . $id;
+			$reply = "The report " . $text . " has been updated with category " . $id;
 			$content = array('chat_id' => $chat_id, 'text' => $reply);
 			$telegram->sendMessage($content);
 			exec(' sqlite3 -header -csv ' . $db_path . ' "select * from segnalazioni;" > ' . $csv_path . ' ');
@@ -481,7 +489,7 @@ class mainloop
 	// Crea la tastiera
 	function create_keyboard($telegram, $chat_id)
 	{
-		$option = array(["❓instruction", "©️info"]);
+		$option = array(["❓instruction", "©️info", "Send Report"]);
 		$keyb = $telegram->buildKeyBoard($option, $onetime = true);
 		$content = array('chat_id' => $chat_id, 'reply_markup' => $keyb, 'text' => "[see reports map on " . SERVER . "/ or send your report selecting \xF0\x9F\x93\x8E]");
 		$telegram->sendMessage($content);
@@ -524,6 +532,59 @@ class mainloop
 	}
 
 
+	// this function return the username error
+	function listMyReports($today, $username, $telegram, $user_id, $chat_id)
+	{
+		$db = new SQLite3(DB_PATH);
+		$db_table = DB_TABLE_GEO;
+		$statement = $db->prepare("SELECT bot_request_message as repID, text, categoria, time, luogo, lat,lng FROM $db_table WHERE user=:user");
+		$statement->bindValue(':user', $user_id);
+		$result = $statement->execute();
+		$message = "";
+		while ($row = $result->fetchArray()) {
+			$position = str_replace("__", ",", $row['luogo']);
+			$position = str_replace("___", "'", $position);
+			$position = str_replace("_", ",", $position);
+
+			$log = $today . ",list of report per user, n. rows " . $row['count'] . " " . $chat_id . ", " . $username . "," . $user_id . "\n";
+			file_put_contents(LOG_FILE, $log, FILE_APPEND | LOCK_EX);
+			$message .= "\n";
+			$message .= "N°: /rep_" . $row["repID"] . "\n";
+			$message .= "<b>Inserted on:</b> " . $row['time'] . "\n";
+			$message .= "<b>Where:</b> " . $position . "\n";
+			$message .= "<b>Text:</b> " . $row['text'] . "\n";
+			$message .= "<b>Category:</b> " . $row['categoria'] . "\n";
+			$message .= "_____________\n";
+		}
+
+		$content = array(
+			'chat_id' => $chat_id,
+			'text' =>  $message,
+			'parse_mode' => 'HTML',
+			'disable_web_page_preview' => true
+		);
+		$telegram->sendMessage($content);
+		exit;
+	}
+
+	/**
+	 * this function will send the help message
+	 */
+	function sendHelp($telegram, $chat_id)
+	{
+		$helpMessage = "Commands List:\n"
+			. "/start - to show the information about the BOT\n"
+			. "/help - to show this menu\n"
+			. "/location or location - to send the location and start the reporting\n"
+			. "/a:xyz  or a:xyz - to update a report with xyz ID (e.g. /a:123 a:123 )\n"
+			. "/t:xyz:text or t:xyz:text - to update the text for the report with xyz number (e.g. /t:123:this is a test)\n"
+			. "/d:xyz  or d:xyz - to delete the report if you are the sender (e.g. /d:123)\n";
+		$content = array('chat_id' => $chat_id, 'text' => $helpMessage, 'disable_web_page_preview' => true);
+		$telegram->sendMessage($content);
+		$this->create_keyboard($telegram, $chat_id);
+		exit;
+	}
+
 	function location_manager($username, $db, $telegram, $user_id, $chat_id, $location)
 	{
 		date_default_timezone_set('Europe/Brussels');
@@ -565,10 +626,29 @@ class mainloop
 			$obj = json_decode($bot_request_message);
 			$id = $obj->result;
 			$id = $id->message_id;
-			$temp_c1 = str_replace(",", "_", $temp_c1);
-			$temp_c1 = str_replace("'", "_", $temp_c1);
+			$temp_c1 = str_replace(",", "__", $temp_c1);
+			$temp_c1 = str_replace("'", "___", $temp_c1);
 			$statement = "INSERT INTO " . DB_TABLE_GEO . " (lat,lng,user,username,text,bot_request_message,time,file_id,file_path,filename,first_name,luogo) VALUES ('" . $lat . "','" . $lng . "','" . $user_id . "',' ',' ','" . $id . "','" . $timec . "',' ',' ',' ',' ','" . $temp_c1 . "')";
 			$stmt = $db->exec($statement);
+
+			// $statement = $db->prepare("INSERT INTO " . DB_TABLE_GEO . " (lat,lng,user,username,text,bot_request_message,time,file_id,file_path,filename,first_name,luogo) VALUES (:lat,:lng,:user_id,' ',' ',:msgId,:timec,' ',' ',' ',' ',:temp_c1)");
+			// $statement->bindValue(':lat', $lat);
+			// $statement->bindValue(':lng', $lng);
+			// $statement->bindValue(':user', $user_id);
+			// $statement->bindValue(':msgId', $id);
+			// $statement->bindValue(':timec', $timec);
+			// $statement->bindValue(':temp_c1', $temp_c1);
+
+			// $stmt = $statement->execute();
+
+			// $stmt = $statement->execute([
+			// 	':lat' => $lat,
+			// 	':lng' => $lng,
+			// 	':user' => $username,
+			// 	':msgId' => $id,
+			// 	':timec' => $timec,
+			// 	':temp_c1' => $temp_c1,
+			// ]);
 			if (!$stmt) {
 				$content = array('chat_id' => $chat_id, 'text' => "Error!!!" . $statement, 'disable_web_page_preview' => true);
 				$telegram->sendMessage($content);
