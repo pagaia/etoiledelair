@@ -47,7 +47,7 @@ class mainloop
 		date_default_timezone_set('Europe/Brussels');
 		$today = date("Y-m-d H:i:s");
 
-		$log = $today . ",Message: ," . $username . "," .  $text . "," . $chat_id . "," . $user_id . "," . $location . "," . print_r($reply_to_msg, TRUE)  . "\n";
+		$log = $today . ",Message: " . $username . "," .  $text . "," . $chat_id . "," . $user_id . "," . $location . "," . print_r($reply_to_msg, TRUE)  . "\n";
 		file_put_contents(LOG_FILE, $log, FILE_APPEND | LOCK_EX);
 
 		// convert text to UPPER CASE only if not a T: command to avoid issue on matching
@@ -532,7 +532,7 @@ class mainloop
 	}
 
 
-	// this function return the username error
+	// this function returns the list of reports per user selected user
 	function listMyReports($today, $username, $telegram, $user_id, $chat_id)
 	{
 		$db = new SQLite3(DB_PATH);
@@ -631,6 +631,7 @@ class mainloop
 			$statement = "INSERT INTO " . DB_TABLE_GEO . " (lat,lng,user,username,text,bot_request_message,time,file_id,file_path,filename,first_name,luogo) VALUES ('" . $lat . "','" . $lng . "','" . $user_id . "',' ',' ','" . $id . "','" . $timec . "',' ',' ',' ',' ','" . $temp_c1 . "')";
 			$stmt = $db->exec($statement);
 
+			// still not working the statement with parameters
 			// $statement = $db->prepare("INSERT INTO " . DB_TABLE_GEO . " (lat,lng,user,username,text,bot_request_message,time,file_id,file_path,filename,first_name,luogo) VALUES (:lat,:lng,:user_id,' ',' ',:msgId,:timec,' ',' ',' ',' ',:temp_c1)");
 			// $statement->bindValue(':lat', $lat);
 			// $statement->bindValue(':lng', $lng);
