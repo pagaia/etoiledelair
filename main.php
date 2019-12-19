@@ -59,17 +59,20 @@ class mainloop
 			$this->sendHelp($telegram, $chat_id);
 		} elseif ($text == "/START" || $text == "INFO" || $text == "©️INFO") {
 			$reply = "Welcome $first_name 
-			This Bot has been adapted by @pagaia as support tool to get reports about issues in the city.
-			In particular it is used to report sensitive areas/points in some streets for the normal way to and from school in order to help the Filter Cafe Filtre of Etterbeek
-			to localize in a simple and shared way the information.
-			The author is not responsible for the improper use of this tool and the contents of the users.
+	This Bot has been adapted by @pagaia as support tool to get reports about issues in the city.
+In particular it is used to report sensitive areas/points in some streets for the normal way back and forward school 
+in order to help the Filter Cafe Filtre of Etterbeek
+to localize in a simple and shared way the information.
+The author is not responsible for the improper use of this tool and the contents of the users.
 			
-			Only registered users with a Telegram \"username\" can add report. All reports are registered with the username and can be
-			publicily accessed on map with CC0 (public domain) license.
-			To partecipate please fill the following form: https://forms.gle/mVjCWrdGbETrhZk76.
+	Only registered users with a Telegram \"username\" can add report. All reports are registered with the username and can be
+publicily accessed on map with CC0 (public domain) license.
+To partecipate please fill the following form: https://forms.gle/mVjCWrdGbETrhZk76.
 				
-			The address geocoding is achieved thanks to the OpenStreetMap Nominatim database with oDBL license.
-			The map icons have been created by Francesco Lanotte";
+	The address geocoding is achieved thanks to the OpenStreetMap Nominatim database with oDBL license.
+The map icons have been created by Francesco Lanotte
+
+	Type /start or info to read again this intruduction or /help for more information about commands";
 
 
 			$content = array('chat_id' => $chat_id, 'text' => $reply, 'disable_web_page_preview' => true);
@@ -453,10 +456,10 @@ class mainloop
 				$telegram->sendMessage($content);
 
 				// STANDARD //
-				$option = array(["😡Vandalismo\n:" . $reply_to_msg['message_id'] . ":", "♿️Buche\n:" . $reply_to_msg['message_id'] . ":"], ["🌲Rifiuti\n:" . $reply_to_msg['message_id'] . ":", "💡Palo luce\n:" . $reply_to_msg['message_id'] . ":"], ["Cancel"]);
-				$keyb = $telegram->buildKeyBoard($option, $onetime = true);
-				$content = array('chat_id' => $chat_id, 'reply_markup' => $keyb, 'text' => "[see the reports map at " . SERVER . " or add a category:]");
-				$telegram->sendMessage($content);
+				// $option = array(["😡Vandalismo\n:" . $reply_to_msg['message_id'] . ":", "♿️Buche\n:" . $reply_to_msg['message_id'] . ":"], ["🌲Rifiuti\n:" . $reply_to_msg['message_id'] . ":", "💡Palo luce\n:" . $reply_to_msg['message_id'] . ":"], ["Cancel"]);
+				// $keyb = $telegram->buildKeyBoard($option, $onetime = true);
+				// $content = array('chat_id' => $chat_id, 'reply_markup' => $keyb, 'text' => "[see the reports map at " . SERVER . " or add a category:]");
+				// $telegram->sendMessage($content);
 			}
 			//comando errato
 			else {
@@ -464,7 +467,7 @@ class mainloop
 				$reply = "Command not recognized. Please send first your position";
 				$content = array('chat_id' => $chat_id, 'text' => $reply);
 				$telegram->sendMessage($content);
-
+				$this->create_keyboard($telegram, $chat_id);
 				$log = $today . ",wrong command sent," . $chat_id . "\n";
 			}
 		}
@@ -489,7 +492,7 @@ class mainloop
 	// Crea la tastiera
 	function create_keyboard($telegram, $chat_id)
 	{
-		$option = array(["❓instruction", "©️info", "Send Report"]);
+		$option = array(["❓instruction", "©️info"], ["Send Report", "Help"]);
 		$keyb = $telegram->buildKeyBoard($option, $onetime = true);
 		$content = array('chat_id' => $chat_id, 'reply_markup' => $keyb, 'text' => "[see reports map on " . SERVER . "/ or send your report selecting \xF0\x9F\x93\x8E]");
 		$telegram->sendMessage($content);
@@ -541,7 +544,9 @@ class mainloop
 		$statement->bindValue(':user', $user_id);
 		$result = $statement->execute();
 		$message = "";
+		$count = 0;
 		while ($row = $result->fetchArray()) {
+			$count++;
 			$position = str_replace("__", ",", $row['luogo']);
 			$position = str_replace("___", "'", $position);
 			$position = str_replace("_", ",", $position);
@@ -552,11 +557,15 @@ class mainloop
 			$message .= "N°: /rep_" . $row["repID"] . "\n";
 			$message .= "<b>Inserted on:</b> " . $row['time'] . "\n";
 			$message .= "<b>Where:</b> " . $position . "\n";
-			$message .= "<b>Text:</b> " . $row['text'] . "\n";
-			$message .= "<b>Category:</b> " . $row['categoria'] . "\n";
+			$message .= $row['text'] ? "<b>Text:</b> " . $row['text'] . "\n" : '';
+			$message .= $row['categoria'] ? "<b>Category:</b> " . $row['categoria'] . "\n" : '';
+			$message .= "<b>Map:</b> " . SERVER . "/#18/" . $row['lat'] . "/" . $row['lng'] . "\n";
 			$message .= "_____________\n";
 		}
 
+		if ($count == 0) {
+			$message = "Sorry, you didn't report any signalation.";
+		}
 		$content = array(
 			'chat_id' => $chat_id,
 			'text' =>  $message,
@@ -564,6 +573,7 @@ class mainloop
 			'disable_web_page_preview' => true
 		);
 		$telegram->sendMessage($content);
+		$this->create_keyboard($telegram, $chat_id);
 		exit;
 	}
 

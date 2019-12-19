@@ -156,7 +156,7 @@
 					if (feature.properties.first_name.length > 2) popup += 'Name: <b>' + feature.properties.first_name + '</b><br />';
 				}
 				if (feature.properties.text.length > 0) popup += 'Text: <b>' + feature.properties.text + '</b><br />';
-				popup += 'On: <b>' + feature.properties.time + '</b><br />';
+				popup += 'Reported On: <b>' + feature.properties.time + '</b><br />';
 				popup += 'Number: <b>' + feature.properties.bot_request_message + '</b><br />';
 				if (feature.properties.categoria.length > 0) popup += 'Category: <b>' + feature.properties.categoria + '</b><br />';
 				if (feature.properties.file_id.length > 0) {
