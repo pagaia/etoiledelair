@@ -11,7 +11,7 @@ define('GDRIVEGID', ''); // GID dello sheet delle risposte al form di google dri
 define('GDRIVEGIDADMIN', ''); // GID dello sheet di google drive in cui ci sono gli utenti autorizzati agli aggiornamenti
 define('GRUPPO', ''); // gruppo Telegram riservato dove ricevere le segnalazioni. Inserire il bot tra gli amministratori del gruppo!! di solito inzia con -
 define('SERVER', 'https://dominioinhttps/conpercorsodelbot/'); // indirizzo e path del server dove accedere per controllare le segnalazioni
-define('GOOGLE_URL_BASE', "https://docs.google.com/spreadsheets/d/". GDRIVEKEY . "/gviz/tq?tqx=out:csv&amp;tq="); // google url to access the spreadsheet
+define('GOOGLE_URL_BASE', "https://docs.google.com/spreadsheets/d/". GDRIVEKEY . "/gviz/tq?tqx=out:csv&tq="); // google url to access the spreadsheet
 
 // Your csv database
 $csv_path = '/percorsodelbot/db/map_data.txt'; // da personalizzare
